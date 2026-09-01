@@ -8,6 +8,7 @@ const NAV = [
   ["services", "services"],
   ["how-it-works", "how_it_works"],
   ["advantages", "advantages"],
+  ["reviews", "reviews"],
   ["faq", "faq"],
   ["contact", "contact"],
 ];
@@ -82,7 +83,7 @@ export const Footer = () => {
 
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
           <p>© {new Date().getFullYear()} {SITE.name} · {t.footer.rights}</p>
-          <p className="font-mono">{t.footer.demo}</p>
+          {SITE.isDemo && <p data-testid="footer-demo-badge" className="font-mono">{t.footer.demo}</p>}
         </div>
       </div>
     </footer>

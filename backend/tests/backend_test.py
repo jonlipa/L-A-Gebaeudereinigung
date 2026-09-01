@@ -89,12 +89,12 @@ class TestContact:
     created_id = None
 
     def test_create_contact_public(self):
-        r = requests.post(f"{API}/contact", json=_payload())
+        r = requests.post(f"{API}/contact", json=_payload(name="QA Test"))
         assert r.status_code == 200, r.text
         d = r.json()
-        assert d["email_sent"] is False  # RESEND_API_KEY empty
+        assert d["email_sent"] is True  # RESEND_API_KEY is live now
         sub = d["submission"]
-        assert sub["name"] == "TEST_John"
+        assert sub["name"] == "QA Test"
         assert sub["email"] == "test_john@example.com"
         assert sub["status"] == "new"
         assert "id" in sub
@@ -163,3 +163,72 @@ class TestContact:
         r = requests.delete(f"{API}/contact/does-not-exist-xyz",
                             headers=auth_headers)
         assert r.status_code == 404
+
+
+# --- Throttle / Lockout ---
+# NOTE: identifier is IP+email. Ingress may append/override X-Forwarded-For,
+# but distinct emails guarantee distinct identifiers. We use "invalid" emails so
+# no real admin account is locked (they still count toward the counter).
+import uuid as _uuid
+
+
+def _locktest_email():
+    return f"locktest-{_uuid.uuid4().hex[:8]}@example.com"
+
+
+class TestLoginThrottle:
+    def test_401_shows_remaining_then_429_on_5th(self):
+        email = _locktest_email()
+        # 4 failed attempts -> 401 with remaining counts 4,3,2,1
+        for expected_remaining in [4, 3, 2, 1]:
+            r = requests.post(f"{API}/auth/login",
+                              json={"email": email, "password": "wrong"})
+            assert r.status_code == 401, r.text
+            detail = r.json().get("detail", "")
+            assert f"{expected_remaining} attempt" in detail, detail
+        # 5th attempt -> 429 with Retry-After
+        r = requests.post(f"{API}/auth/login",
+                          json={"email": email, "password": "wrong"})
+        assert r.status_code == 429, r.text
+        assert "Retry-After" in r.headers
+        assert int(r.headers["Retry-After"]) > 0
+        assert "Too many failed attempts" in r.json().get("detail", "")
+
+        # 6th attempt with CORRECT password (same identifier) still locked
+        r = requests.post(f"{API}/auth/login",
+                          json={"email": email, "password": ADMIN_PASSWORD})
+        # since email != ADMIN_EMAIL it would 401, but lockout runs first -> 429
+        assert r.status_code == 429, r.text
+
+    def test_successful_login_resets_counter(self):
+        # 2 failed logins for real admin (they count against IP+admin_email identifier)
+        # To avoid locking real admin: use a fresh email that is invalid email address on server
+        # but ALSO test the reset: perform 2 fails on ADMIN_EMAIL with wrong pw, then success,
+        # then 4 more wrongs -> should still be 401 (not 429).
+        # Ensure we start clean by clearing any prior attempts for admin via successful login first.
+        r0 = requests.post(f"{API}/auth/login",
+                           json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+        assert r0.status_code == 200, r0.text  # resets counter
+
+        for expected_remaining in [4, 3]:
+            r = requests.post(f"{API}/auth/login",
+                              json={"email": ADMIN_EMAIL, "password": "wrong"})
+            assert r.status_code == 401, r.text
+            assert f"{expected_remaining} attempt" in r.json().get("detail", "")
+
+        # Successful login -> resets
+        r = requests.post(f"{API}/auth/login",
+                          json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+        assert r.status_code == 200, r.text
+
+        # 4 more failures should all be 401 (not 429) since counter reset
+        for expected_remaining in [4, 3, 2, 1]:
+            r = requests.post(f"{API}/auth/login",
+                              json={"email": ADMIN_EMAIL, "password": "wrong"})
+            assert r.status_code == 401, r.text
+            assert f"{expected_remaining} attempt" in r.json().get("detail", "")
+
+        # Reset counter again with a successful login so we don't leave admin near lockout
+        r = requests.post(f"{API}/auth/login",
+                          json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+        assert r.status_code == 200, r.text

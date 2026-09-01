@@ -36,7 +36,14 @@ Create a professional demo website for a cleaning company based on its logo (L&A
 - **Before/After gallery**: `components/BeforeAfter.jsx` — draggable comparison slider + 3 tabs (office/glass/stairwell), AI-generated demo photos in `config/site.js` BEFORE_AFTER.
 - Tested end-to-end (iteration_2: backend 19/19, frontend 100%, no issues). Backend pytest at `/app/backend/tests/backend_test.py`.
 
+## Implemented (2026-09, iteration 3)
+- **Login throttle**: 5 failed logins per IP+email → 15-min lockout (429 + Retry-After, `login_attempts` Mongo collection, unique index). 401 messages include attempts left; success clears counter. Admin UI shows red locked banner.
+- **Google Reviews strip**: `components/Testimonials.jsx` — auto-scrolling review-card marquee + Google rating badge; data in `config/site.js` REVIEWS (6 DEMO quotes, bilingual). Nav/footer link "Referenzen/Reviews" (#reviews).
+- **Real-website readiness**: `SITE.isDemo` flag hides all demo badges/fill-demo button when false; legal pages (Impressum/Datenschutz) now pull address/phone/email/owner/VAT from `SITE`; SEO meta/og tags + favicon in `public/index.html`.
+- **Live email ON**: real `RESEND_API_KEY` in backend `.env` → `POST /api/contact` returns `email_sent: true`; sender `onboarding@resend.dev` → only delivers to the Resend account owner's inbox until a domain is verified.
+- Tested end-to-end (iteration_3: backend 21/21, frontend all pass).
+
 ## Backlog
-- P0: Add real Resend API key to `/app/backend/.env` to enable live email sending
-- P1: Replace placeholder data in `src/config/site.js` and demo legal text with real content
-- P2: Add brute-force throttle / rate limit on `/api/auth/login`; service detail modals; testimonials
+- P0: User still needs to supply REAL phone/email/address/owner/VAT → edit `src/config/site.js`, then set `isDemo: false`
+- P1: Verify own domain on Resend and set `SENDER_EMAIL` to e.g. `anfrage@la-gebaeudereinigung.de`; replace demo REVIEWS with real Google quotes
+- P2: Service detail modals; customer auto-reply email; service-area map

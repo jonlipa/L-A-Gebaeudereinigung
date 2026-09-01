@@ -29,6 +29,7 @@ function LoginScreen({ onLogin }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [locked, setLocked] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -39,7 +40,9 @@ function LoginScreen({ onLogin }) {
       localStorage.setItem(TOKEN_KEY, data.token);
       onLogin(data.token);
     } catch (ex) {
-      setError(errMsg(ex) || t.admin.login.error);
+      const is429 = ex?.response?.status === 429;
+      setLocked(is429);
+      setError(errMsg(ex) || (is429 ? t.admin.login.locked : t.admin.login.error));
     } finally {
       setLoading(false);
     }
@@ -88,7 +91,10 @@ function LoginScreen({ onLogin }) {
               />
             </div>
             {error && (
-              <p data-testid="admin-login-error" className="text-sm text-red-400">{error}</p>
+              <p data-testid="admin-login-error" className={`rounded-lg px-3 py-2 text-sm ${locked ? "bg-red-500/10 border border-red-500/30 text-red-300" : "text-red-400"}`}>
+                {locked && <Lock className="mr-1.5 inline h-3.5 w-3.5 -mt-0.5" />}
+                {error}
+              </p>
             )}
             <button
               data-testid="admin-login-submit"

@@ -1,0 +1,23 @@
+{
+  "summary": "Full retest of iteration_3 features: (1) login throttle/lockout with per-IP+email counter, (2) Testimonials/Reviews strip + navbar link, (3) SITE.isDemo flags on legal/contact/footer/reviews, (4) live Resend email_sent=true. Backend pytest: 21/21 PASSED including new TestLoginThrottle class covering 401 remaining-attempts messages (4/3/2/1 left), 5th attempt -> 429 with Retry-After header, 6th attempt with correct password still 429 (locked), and reset-after-success flow using ADMIN_EMAIL. /api/contact now returns email_sent=true (live Resend). Regression: /api/contact list/patch/delete 401 without token, 200 with token; invalid payloads -> 422; unknown ID -> 404. Frontend Playwright: homepage testimonials-section, google-rating-badge (4.9 / 127), 12 review-cards (duplicated marquee track), reviews-demo-note visible, nav-link-reviews shows 'Referenzen' (DE) and switches to 'Reviews' (EN) with card copy changing DE->EN. Legal pages /impressum /datenschutz /agb all render legal-demo-note; impressum shows 'Musterstraße 123' and 'Max Mustermann' from SITE config. Contact section shows contact-placeholder-note + fill-demo-data-button, footer shows footer-demo-badge, fill-demo + submit shows success toast. Admin lockout UI test done last with locktest-ui@example.com: after 5 wrong submits, admin-login-error displays 'Too many failed attempts. Account locked for 15 min.' with red locked style. No console errors on happy paths.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py record_failed_attempt uses $setOnInsert on locked_until with current time, then $set on the same field when count>=MAX in a second update — works, but two round-trips per failed login. Acceptable for demo scale.",
+    "client_ip() uses the LAST entry of X-Forwarded-For (correct for reverse-proxy chain), but be aware ingress-appended real client IP means client-supplied XFF values are effectively ignored — good for prod, but complicates local IP-spoofing tests (mitigated by keying on IP+email and using distinct emails).",
+    "Login route reveals whether email exists implicitly via counter (both wrong-email and wrong-password paths increment the same identifier). This is fine (unified 401 message) but note the identifier is per submitted email, so an attacker can lock any email address — consider capping counter by IP alone in addition, or captcha, for production.",
+    "_ADMIN_PASSWORD_HASH still generated once at import; rotating ADMIN_PASSWORD requires backend restart (documented in prior review, unchanged)."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100% (21/21)", "frontend": "100% (all specified flows)"},
+  "test_credentials": "jonlipaj23@gmail.com / LAClean2026! (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "Test contact 'QA Test' created via /api/contact; login_attempts records created by throttle tests. Both cleaned up post-run: db.login_attempts.deleteMany({}) and db.contact_submissions.deleteMany({name: 'QA Test'}). Admin ended in unlocked state (last action = successful login).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend tests at /app/backend/tests/backend_test.py (21 pytest tests, class TestLoginThrottle added). Lockout identifier = IP+email; because ingress may append real client IP to X-Forwarded-For, use DISTINCT emails to isolate lockout tests (not custom XFF headers). To unlock during dev: mongosh --eval 'use(\"test_database\"); db.login_attempts.deleteMany({})'. Resend live: email_sent=true expected on /api/contact. Reviews section testids: testimonials-section, google-rating-badge, review-card (x12 due to duplicated marquee), reviews-demo-note. Admin lockout UI testid: admin-login-error contains 'Too many failed attempts' (from backend detail on 429)."
+}

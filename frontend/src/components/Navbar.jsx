@@ -11,6 +11,7 @@ const LINKS = [
   ["services", "services"],
   ["how-it-works", "how_it_works"],
   ["advantages", "advantages"],
+  ["reviews", "reviews"],
   ["faq", "faq"],
   ["contact", "contact"],
 ];

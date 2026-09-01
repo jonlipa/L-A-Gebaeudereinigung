@@ -35,9 +35,11 @@ export default function Legal({ doc }) {
           {page.title}
         </h1>
 
-        <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          {t.legal.demo_note}
-        </div>
+        {SITE.isDemo && (
+          <div data-testid="legal-demo-note" className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {t.legal.demo_note}
+          </div>
+        )}
 
         <div className="mt-12 space-y-10">
           {page.sections.map((s) => (
@@ -49,7 +51,7 @@ export default function Legal({ doc }) {
         </div>
 
         <p className="mt-16 border-t border-slate-200 pt-6 text-xs text-slate-400">
-          © {new Date().getFullYear()} {SITE.name} · {t.footer.demo}
+          © {new Date().getFullYear()} {SITE.name}{SITE.isDemo && ` · ${t.footer.demo}`}
         </p>
       </main>
     </div>

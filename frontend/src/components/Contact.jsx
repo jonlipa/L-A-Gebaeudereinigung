@@ -82,9 +82,11 @@ export const Contact = () => {
                 <InfoRow icon={MapPin} label={t.contact.info_address} value={`${SITE.address.street}\n${SITE.address.city}, ${SITE.address.country}`} testId="contact-info-address" />
                 <InfoRow icon={Clock} label={t.contact.info_hours} value={SITE.hours[lang]} testId="contact-info-hours" />
               </div>
-              <p data-testid="contact-placeholder-note" className="relative mt-8 rounded-lg border border-dashed border-white/25 px-4 py-3 text-xs text-slate-300 font-mono">
-                {t.contact.placeholder_note}
-              </p>
+              {SITE.isDemo && (
+                <p data-testid="contact-placeholder-note" className="relative mt-8 rounded-lg border border-dashed border-white/25 px-4 py-3 text-xs text-slate-300 font-mono">
+                  {t.contact.placeholder_note}
+                </p>
+              )}
             </div>
           </Reveal>
 
@@ -92,15 +94,17 @@ export const Contact = () => {
             <form data-testid="contact-form" onSubmit={submit} className="rounded-[28px] border border-slate-200 bg-paper p-8 sm:p-10">
               <div className="flex items-center justify-between gap-4 mb-8">
                 <p className="font-mono text-xs uppercase tracking-widest text-slate-400">Form · {lang}</p>
-                <button
-                  type="button"
-                  data-testid="fill-demo-data-button"
-                  onClick={fillDemo}
-                  className="btn-spring inline-flex items-center gap-2 rounded-full border border-azure/40 bg-white px-4 py-2 text-xs font-bold text-azure hover:bg-sky-soft"
-                >
-                  <Wand2 className="h-3.5 w-3.5" />
-                  {t.contact.fill_demo}
-                </button>
+                {SITE.isDemo && (
+                  <button
+                    type="button"
+                    data-testid="fill-demo-data-button"
+                    onClick={fillDemo}
+                    className="btn-spring inline-flex items-center gap-2 rounded-full border border-azure/40 bg-white px-4 py-2 text-xs font-bold text-azure hover:bg-sky-soft"
+                  >
+                    <Wand2 className="h-3.5 w-3.5" />
+                    {t.contact.fill_demo}
+                  </button>
+                )}
               </div>
 
               <div className="grid sm:grid-cols-2 gap-5">

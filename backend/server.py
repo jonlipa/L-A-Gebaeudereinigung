@@ -145,10 +145,61 @@ async def root():
     return {"message": "L&A Gebäudereinigung API", "status": "ok"}
 
 
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_MINUTES = 15
+
+
+def client_ip(request: Request) -> str:
+    fwd = request.headers.get("X-Forwarded-For", "")
+    return fwd.split(",")[-1].strip() if fwd else (request.client.host if request.client else "unknown")
+
+
+async def check_lockout(identifier: str) -> None:
+    rec = await db.login_attempts.find_one({"identifier": identifier}, {"_id": 0})
+    if not rec or rec.get("count", 0) < MAX_LOGIN_ATTEMPTS:
+        return
+    locked_until = datetime.fromisoformat(rec["locked_until"])
+    now = datetime.now(timezone.utc)
+    if now >= locked_until:
+        await db.login_attempts.delete_one({"identifier": identifier})
+        return
+    retry_after = int((locked_until - now).total_seconds())
+    raise HTTPException(
+        status_code=429,
+        detail=f"Too many failed attempts. Try again in {max(1, retry_after // 60 + 1)} min.",
+        headers={"Retry-After": str(retry_after)},
+    )
+
+
+async def record_failed_attempt(identifier: str) -> int:
+    now = datetime.now(timezone.utc)
+    rec = await db.login_attempts.find_one_and_update(
+        {"identifier": identifier},
+        {"$inc": {"count": 1}, "$set": {"last_attempt": now.isoformat()},
+         "$setOnInsert": {"locked_until": now.isoformat()}},
+        upsert=True, return_document=True)
+    count = rec["count"]
+    if count >= MAX_LOGIN_ATTEMPTS:
+        await db.login_attempts.update_one(
+            {"identifier": identifier},
+            {"$set": {"locked_until": (now + timedelta(minutes=LOCKOUT_MINUTES)).isoformat()}})
+    return count
+
+
 @api_router.post("/auth/login", response_model=LoginResponse)
-async def login(body: LoginRequest):
-    if body.email.lower() != ADMIN_EMAIL or not verify_password(body.password):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+async def login(body: LoginRequest, request: Request):
+    email = body.email.lower()
+    identifier = f"{client_ip(request)}:{email}"
+    await check_lockout(identifier)
+    if email != ADMIN_EMAIL or not verify_password(body.password):
+        count = await record_failed_attempt(identifier)
+        remaining = MAX_LOGIN_ATTEMPTS - count
+        if remaining <= 0:
+            raise HTTPException(status_code=429,
+                                detail=f"Too many failed attempts. Account locked for {LOCKOUT_MINUTES} min.",
+                                headers={"Retry-After": str(LOCKOUT_MINUTES * 60)})
+        raise HTTPException(status_code=401, detail=f"Invalid email or password. {remaining} attempt(s) left.")
+    await db.login_attempts.delete_one({"identifier": identifier})
     return LoginResponse(token=create_access_token(ADMIN_EMAIL), email=ADMIN_EMAIL)
 
 
@@ -197,6 +248,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+async def create_indexes():
+    await db.login_attempts.create_index("identifier", unique=True)
+    await db.contact_submissions.create_index("created_at")
 
 
 @app.on_event("shutdown")

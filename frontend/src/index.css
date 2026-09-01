@@ -155,6 +155,9 @@
   .marquee-track:hover {
     animation-play-state: paused;
   }
+  .reviews-track {
+    animation-duration: 70s;
+  }
   @keyframes marquee {
     from {
       transform: translateX(0);

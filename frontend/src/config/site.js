@@ -1,11 +1,14 @@
 // ============================================================
-//  PLACEHOLDER COMPANY DATA – REPLACE WITH REAL VALUES
-//  Every value below is demo content. Edit this single file to
-//  update phone, email, address and hours across the whole site.
+//  COMPANY DATA – single source of truth for the whole site.
+//  1. Replace every value marked TODO with your real data.
+//  2. Set `isDemo: false` → all "demo / placeholder" badges,
+//     the demo-data button and demo review labels disappear.
 // ============================================================
 export const SITE = {
+  isDemo: true, // TODO: set to false when real data is entered
   name: "L&A Gebäudereinigung",
   shortName: "L&A Clean Service",
+  url: "https://www.la-gebaeudereinigung.de", // TODO: replace with live domain
   logo: "https://customer-assets-gfyr7b9c.emergentagent.net/job_000f4ad1-ddb1-44d4-893c-dac6293ad204/artifacts/60kz20kt_image.png",
   phone: "+49 (0) 30 12345678", // TODO: replace
   phoneHref: "tel:+493012345678", // TODO: replace
@@ -21,6 +24,10 @@ export const SITE = {
   },
   serviceArea: { DE: "Berlin & Brandenburg", EN: "Berlin & Brandenburg" }, // TODO: replace
   foundedYear: 2004, // TODO: replace
+  legal: {
+    owner: "Max Mustermann", // TODO: replace (Geschäftsführung / Inhaber)
+    vatId: "DE123456789", // TODO: replace (USt-IdNr.) or leave "" if none
+  },
   demoData: {
     name: "Dipl.-Ing. Markus Weber",
     phone: "+49 30 98765432",
@@ -30,6 +37,78 @@ export const SITE = {
     message:
       "Guten Tag, wir suchen ab nächstem Monat eine tägliche Büroreinigung für unsere 2.500 m² Bürofläche im Technologiepark Berlin.",
   },
+};
+
+// ============================================================
+//  GOOGLE REVIEWS – replace with real client quotes.
+//  rating: 1–5, text is bilingual. Keep 3–8 entries.
+// ============================================================
+export const REVIEWS = {
+  average: 4.9, // TODO: replace with your real Google rating
+  count: 127, // TODO: replace with your real review count
+  profileUrl: "https://www.google.com/maps", // TODO: link to your Google Business Profile
+  items: [
+    {
+      name: "Sabine Krüger",
+      role: { DE: "Facility Managerin, Immobilien AG", EN: "Facility Manager, Real Estate AG" },
+      city: "Berlin-Mitte",
+      rating: 5,
+      text: {
+        DE: "Seit drei Jahren betreut L&A unsere 4.000 m² Bürofläche. Absolut zuverlässig, unauffällig und die Qualität ist jeden Morgen spürbar.",
+        EN: "L&A has looked after our 4,000 sqm office space for three years. Absolutely reliable, discreet, and the quality is noticeable every morning.",
+      },
+    },
+    {
+      name: "Thomas Behrendt",
+      role: { DE: "Geschäftsführer, Behrendt Logistik", EN: "Managing Director, Behrendt Logistics" },
+      city: "Potsdam",
+      rating: 5,
+      text: {
+        DE: "Die Industriereinigung unserer Lagerhalle lief termingerecht und ohne Störung des Betriebs. Faire Festpreise, klare Kommunikation.",
+        EN: "Industrial cleaning of our warehouse was completed on schedule without disrupting operations. Fair fixed prices, clear communication.",
+      },
+    },
+    {
+      name: "Dr. Anja Lindqvist",
+      role: { DE: "Praxisinhaberin, Zahnmedizin", EN: "Practice Owner, Dental Clinic" },
+      city: "Berlin-Charlottenburg",
+      rating: 5,
+      text: {
+        DE: "Hygiene ist bei uns nicht verhandelbar. L&A arbeitet mit ECO-Mitteln und dokumentiert jede Reinigung – genau das, was wir brauchen.",
+        EN: "Hygiene is non-negotiable for us. L&A works with ECO products and documents every clean – exactly what we need.",
+      },
+    },
+    {
+      name: "Markus Feldmann",
+      role: { DE: "Hausverwaltung Feldmann & Partner", EN: "Property Management Feldmann & Partner" },
+      city: "Berlin-Prenzlauer Berg",
+      rating: 4,
+      text: {
+        DE: "Treppenhausreinigung für 12 Wohnhäuser – die Mieterbeschwerden sind seit dem Wechsel zu L&A praktisch verschwunden.",
+        EN: "Stairwell cleaning for 12 apartment buildings – tenant complaints have practically disappeared since switching to L&A.",
+      },
+    },
+    {
+      name: "Julia Sommer",
+      role: { DE: "Store Managerin, Fashion Retail", EN: "Store Manager, Fashion Retail" },
+      city: "Berlin-Kurfürstendamm",
+      rating: 5,
+      text: {
+        DE: "Streifenfreie Schaufenster, jede Woche pünktlich vor Ladenöffnung. Unser Store sieht aus wie am Eröffnungstag.",
+        EN: "Streak-free shop windows, on time every week before opening. Our store looks like it did on launch day.",
+      },
+    },
+    {
+      name: "Peter Wolff",
+      role: { DE: "Bauleiter, Wolff Bau GmbH", EN: "Site Manager, Wolff Construction" },
+      city: "Brandenburg an der Havel",
+      rating: 5,
+      text: {
+        DE: "Bauendreinigung für 3.200 m² Neubau innerhalb von zwei Tagen – Übergabe an den Bauherrn ohne einen einzigen Mangel.",
+        EN: "Post-construction cleaning of a 3,200 sqm new build in two days – handover to the client without a single defect.",
+      },
+    },
+  ],
 };
 
 export const IMAGES = {

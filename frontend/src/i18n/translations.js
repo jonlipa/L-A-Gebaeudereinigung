@@ -1,5 +1,11 @@
 export const SERVICE_KEYS = ["office", "glass", "stairwell", "industrial", "construction", "maintenance"];
 
+import { SITE } from "@/config/site";
+
+const ADDR = `${SITE.address.street}\n${SITE.address.city}`;
+const CONTACT_DE = `Telefon: ${SITE.phone}\nE-Mail: ${SITE.email}`;
+const CONTACT_EN = `Phone: ${SITE.phone}\nEmail: ${SITE.email}`;
+
 export const translations = {
   DE: {
     nav: {
@@ -7,6 +13,7 @@ export const translations = {
       services: "Leistungen",
       how_it_works: "Ablauf",
       advantages: "Vorteile",
+      reviews: "Referenzen",
       faq: "FAQ",
       contact: "Kontakt",
       cta: "Angebot anfordern",
@@ -156,6 +163,13 @@ export const translations = {
       quote: "„Sauberkeit ist kein Zufall – sie ist das Ergebnis von Systematik.“",
       quoteBy: "L&A Objektleitung",
     },
+    reviews: {
+      tag: "Kundenstimmen",
+      title: "Das sagen unsere Kunden über L&A",
+      subtitle: "Echte Bewertungen von Facility Managern, Hausverwaltungen und Unternehmern aus der Region.",
+      google_label: "Google-Bewertungen",
+      demo_note: "Demo-Bewertungen – Platzhalter, bitte durch echte Google-Rezensionen in config/site.js ersetzen.",
+    },
     faq: {
       tag: "Häufige Fragen",
       title: "Antworten auf Ihre wichtigsten Fragen",
@@ -249,6 +263,7 @@ export const translations = {
         submit: "Anmelden",
         signing_in: "Anmeldung…",
         error: "Anmeldung fehlgeschlagen. Bitte prüfen Sie Ihre Zugangsdaten.",
+        locked: "Zu viele Fehlversuche. Zugang vorübergehend gesperrt – bitte später erneut versuchen.",
         logout: "Abmelden",
       },
       cols: { date: "Datum", contact: "Kontakt", location: "Standort", service: "Leistung", message: "Nachricht", status: "Status" },
@@ -272,11 +287,11 @@ export const translations = {
       impressum: {
         title: "Impressum",
         sections: [
-          { heading: "Angaben gemäß § 5 TMG", body: "L&A Gebäudereinigung\nMusterstraße 123\n10115 Berlin\nDeutschland" },
-          { heading: "Vertreten durch", body: "Geschäftsführung: Max Mustermann" },
-          { heading: "Kontakt", body: "Telefon: +49 (0) 30 12345678\nE-Mail: info@la-gebaeudereinigung.de" },
-          { heading: "Umsatzsteuer-ID", body: "Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: DE123456789" },
-          { heading: "Verantwortlich für den Inhalt", body: "Max Mustermann, Anschrift wie oben." },
+          { heading: "Angaben gemäß § 5 TMG", body: `${SITE.name}\n${ADDR}\n${SITE.address.country}` },
+          { heading: "Vertreten durch", body: `Geschäftsführung: ${SITE.legal.owner}` },
+          { heading: "Kontakt", body: CONTACT_DE },
+          { heading: "Umsatzsteuer-ID", body: `Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: ${SITE.legal.vatId}` },
+          { heading: "Verantwortlich für den Inhalt", body: `${SITE.legal.owner}, Anschrift wie oben.` },
           { heading: "Haftung für Inhalte", body: "Als Diensteanbieter sind wir für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Wir sind jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen." },
         ],
       },
@@ -284,7 +299,7 @@ export const translations = {
         title: "Datenschutzerklärung",
         sections: [
           { heading: "1. Datenschutz auf einen Blick", body: "Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten passiert, wenn Sie diese Website besuchen." },
-          { heading: "2. Verantwortliche Stelle", body: "L&A Gebäudereinigung\nMusterstraße 123, 10115 Berlin\nE-Mail: info@la-gebaeudereinigung.de" },
+          { heading: "2. Verantwortliche Stelle", body: `${SITE.name}\n${ADDR}\nE-Mail: ${SITE.email}` },
           { heading: "3. Erhebung von Daten", body: "Wenn Sie unser Kontaktformular nutzen, verarbeiten wir die von Ihnen angegebenen Daten (Name, Telefon, E-Mail, Standort, Nachricht) ausschließlich zur Bearbeitung Ihrer Anfrage." },
           { heading: "4. Ihre Rechte", body: "Sie haben jederzeit das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung Ihrer gespeicherten personenbezogenen Daten." },
           { heading: "5. Speicherdauer", body: "Ihre Daten werden gelöscht, sobald der Zweck der Speicherung entfällt und keine gesetzlichen Aufbewahrungspflichten bestehen." },
@@ -309,6 +324,7 @@ export const translations = {
       services: "Services",
       how_it_works: "Process",
       advantages: "Advantages",
+      reviews: "Reviews",
       faq: "FAQ",
       contact: "Contact",
       cta: "Request Quote",
@@ -458,6 +474,13 @@ export const translations = {
       quote: "“Cleanliness is never an accident – it is the result of a system.”",
       quoteBy: "L&A Site Management",
     },
+    reviews: {
+      tag: "Client Reviews",
+      title: "What Our Clients Say About L&A",
+      subtitle: "Real reviews from facility managers, property managers and business owners across the region.",
+      google_label: "Google reviews",
+      demo_note: "Demo reviews – placeholders, replace with real Google reviews in config/site.js.",
+    },
     faq: {
       tag: "Frequently Asked Questions",
       title: "Answers to Your Key Questions",
@@ -551,6 +574,7 @@ export const translations = {
         submit: "Sign in",
         signing_in: "Signing in…",
         error: "Login failed. Please check your credentials.",
+        locked: "Too many failed attempts. Access temporarily locked – please try again later.",
         logout: "Log out",
       },
       cols: { date: "Date", contact: "Contact", location: "Location", service: "Service", message: "Message", status: "Status" },
@@ -574,11 +598,11 @@ export const translations = {
       impressum: {
         title: "Imprint",
         sections: [
-          { heading: "Information pursuant to § 5 TMG", body: "L&A Gebäudereinigung\nMusterstraße 123\n10115 Berlin\nGermany" },
-          { heading: "Represented by", body: "Management: Max Mustermann" },
-          { heading: "Contact", body: "Phone: +49 (0) 30 12345678\nEmail: info@la-gebaeudereinigung.de" },
-          { heading: "VAT ID", body: "VAT identification number pursuant to § 27a of the German VAT Act: DE123456789" },
-          { heading: "Responsible for content", body: "Max Mustermann, address as above." },
+          { heading: "Information pursuant to § 5 TMG", body: `${SITE.name}\n${ADDR}\nGermany` },
+          { heading: "Represented by", body: `Management: ${SITE.legal.owner}` },
+          { heading: "Contact", body: CONTACT_EN },
+          { heading: "VAT ID", body: `VAT identification number pursuant to § 27a of the German VAT Act: ${SITE.legal.vatId}` },
+          { heading: "Responsible for content", body: `${SITE.legal.owner}, address as above.` },
           { heading: "Liability for content", body: "As a service provider, we are responsible for our own content on these pages in accordance with general laws. However, we are not obligated to monitor transmitted or stored third-party information." },
         ],
       },
@@ -586,7 +610,7 @@ export const translations = {
         title: "Privacy Policy",
         sections: [
           { heading: "1. Privacy at a glance", body: "The following notes provide a simple overview of what happens to your personal data when you visit this website." },
-          { heading: "2. Responsible party", body: "L&A Gebäudereinigung\nMusterstraße 123, 10115 Berlin\nEmail: info@la-gebaeudereinigung.de" },
+          { heading: "2. Responsible party", body: `${SITE.name}\n${ADDR}\nEmail: ${SITE.email}` },
           { heading: "3. Data collection", body: "When you use our contact form, we process the data you provide (name, phone, email, location, message) solely to handle your inquiry." },
           { heading: "4. Your rights", body: "You have the right at any time to obtain information, correction, deletion and restriction of the processing of your stored personal data." },
           { heading: "5. Retention period", body: "Your data will be deleted as soon as the purpose of storage no longer applies and there are no statutory retention obligations." },
