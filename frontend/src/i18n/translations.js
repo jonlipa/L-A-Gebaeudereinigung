@@ -103,6 +103,42 @@ export const translations = {
           desc: "Kontinuierliche Pflege und Werterhalt Ihrer Immobilie durch feste Reinigungsintervalle nach Plan.",
         },
       },
+      modal_scope: "Leistungsumfang",
+      modal_pricing: "Preismodell",
+      modal_typical: "Typische Objekte",
+      modal_cta: "Angebot für diese Leistung",
+      details: {
+        office: {
+          scope: ["Böden saugen, wischen & pflegen", "Reinigung von Schreibtischen & Oberflächen", "Sanitär- & Küchenreinigung", "Müllentsorgung & Behälterreinigung"],
+          pricing: "Monatspauschale oder Quadratmeterpreis – individuell nach Reinigungsintervall kalkuliert.",
+          typical: ["Bürogebäude & Coworking-Spaces", "Verwaltungsgebäude", "Kanzleien & Praxen"],
+        },
+        glass: {
+          scope: ["Innen- & Außenreinigung aller Glasflächen", "Rahmen-, Fensterbank- & Falzreinigung", "Fassaden mit Steiger- & Seiltechnik", "Schaufenster & Glaskonstruktionen"],
+          pricing: "Pro Einsatz oder festes Intervall (wöchentlich/monatlich) – abhängig von Fläche und Höhe.",
+          typical: ["Bürofassaden & Glasfronten", "Einzelhandel & Schaufenster", "Atrien & Wintergärten"],
+        },
+        stairwell: {
+          scope: ["Reinigung von Treppen & Podesten", "Handläufe, Geländer & Aufzüge", "Eingangsbereiche & Briefkastenanlagen", "Kellerflure & Nebenräume"],
+          pricing: "Feste Monatspauschale je Objekt – nach Etagenzahl und Intervall.",
+          typical: ["Mehrfamilienhäuser", "Wohnanlagen & WEG", "Geschäftshäuser"],
+        },
+        industrial: {
+          scope: ["Hallen-, Produktions- & Lagerflächen", "Maschinen- & Anlagenreinigung", "Hochregal- & Bodenreinigung", "Einhaltung strenger Sicherheitsvorschriften"],
+          pricing: "Projekt- oder Vertragsbasis – nach Fläche, Aufwand und Sicherheitsanforderungen.",
+          typical: ["Produktionshallen", "Logistik- & Lagerzentren", "Werkstätten"],
+        },
+        construction: {
+          scope: ["Baugrobreinigung & Schuttentfernung", "Feinreinigung aller Oberflächen", "Fenster-, Rahmen- & Bodenreinigung", "Übergabefertige Endreinigung"],
+          pricing: "Einmalpreis pro Projekt – kalkuliert nach m² und Verschmutzungsgrad.",
+          typical: ["Neubauten & Sanierungen", "Wohn- & Gewerbeobjekte", "Innenausbau"],
+        },
+        maintenance: {
+          scope: ["Regelmäßige Unterhaltsreinigung nach Plan", "Böden, Oberflächen & Sanitäranlagen", "Auffüllung von Verbrauchsmaterial", "Dokumentierte Qualitätskontrolle"],
+          pricing: "Monatspauschale mit festem Reinigungsplan – für nachhaltige Werterhaltung.",
+          typical: ["Bürogebäude", "Praxen & Kanzleien", "Öffentliche Einrichtungen"],
+        },
+      },
     },
     how: {
       tag: "So einfach geht's",
@@ -412,6 +448,42 @@ export const translations = {
         maintenance: {
           title: "Maintenance Cleaning",
           desc: "Continuous care and value retention of your property through planned cleaning schedules.",
+        },
+      },
+      modal_scope: "Scope of work",
+      modal_pricing: "Pricing model",
+      modal_typical: "Typical properties",
+      modal_cta: "Request a quote for this service",
+      details: {
+        office: {
+          scope: ["Vacuuming, mopping & floor care", "Cleaning of desks & surfaces", "Sanitary & kitchen cleaning", "Waste disposal & bin cleaning"],
+          pricing: "Monthly flat rate or per-square-metre price – calculated to your cleaning schedule.",
+          typical: ["Office buildings & coworking spaces", "Administrative buildings", "Law firms & practices"],
+        },
+        glass: {
+          scope: ["Interior & exterior glass cleaning", "Frames, sills & rebate cleaning", "Facades via lift & rope access", "Shop windows & glass structures"],
+          pricing: "Per visit or fixed interval (weekly/monthly) – based on area and height.",
+          typical: ["Office facades & glass fronts", "Retail & shop windows", "Atriums & conservatories"],
+        },
+        stairwell: {
+          scope: ["Cleaning of stairs & landings", "Handrails, railings & elevators", "Entrances & mailbox areas", "Basement corridors & utility rooms"],
+          pricing: "Fixed monthly rate per property – based on floors and interval.",
+          typical: ["Apartment buildings", "Residential complexes & HOAs", "Commercial buildings"],
+        },
+        industrial: {
+          scope: ["Hall, production & warehouse areas", "Machinery & plant cleaning", "High-rack & floor cleaning", "Compliance with strict safety regulations"],
+          pricing: "Project or contract basis – by area, effort and safety requirements.",
+          typical: ["Production halls", "Logistics & warehouse centres", "Workshops"],
+        },
+        construction: {
+          scope: ["Rough cleaning & debris removal", "Fine cleaning of all surfaces", "Window, frame & floor cleaning", "Handover-ready final cleaning"],
+          pricing: "One-off price per project – calculated by sqm and level of soiling.",
+          typical: ["New builds & renovations", "Residential & commercial properties", "Interior fit-outs"],
+        },
+        maintenance: {
+          scope: ["Regular scheduled maintenance cleaning", "Floors, surfaces & sanitary areas", "Refilling of consumables", "Documented quality control"],
+          pricing: "Monthly flat rate with a fixed cleaning plan – for long-term value retention.",
+          typical: ["Office buildings", "Practices & law firms", "Public institutions"],
         },
       },
     },

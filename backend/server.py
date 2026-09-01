@@ -111,6 +111,7 @@ class StatusUpdate(BaseModel):
 class ContactResponse(BaseModel):
     submission: ContactSubmission
     email_sent: bool
+    confirmation_sent: bool = False
 
 
 def build_email_html(s: ContactSubmission) -> str:
@@ -137,6 +138,61 @@ async def send_notification(s: ContactSubmission) -> bool:
         return True
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
+        return False
+
+
+def build_customer_email_html(s: ContactSubmission) -> str:
+    de = (s.language or "DE").upper() == "DE"
+    if de:
+        greeting = f"Guten Tag {html.escape(s.name)},"
+        intro = ("vielen Dank für Ihr Interesse an L&A Gebäudereinigung. Wir haben Ihre Anfrage "
+                 "erhalten und melden uns innerhalb von 24 Stunden persönlich bei Ihnen.")
+        summary_label = "Ihre Angaben im Überblick"
+        rows = [("Leistung", s.service), ("Standort", s.location), ("Telefon", s.phone)]
+        closing = "Mit freundlichen Grüßen"
+        team = "Ihr Team der L&A Gebäudereinigung"
+        note = "Dies ist eine automatische Empfangsbestätigung. Bitte antworten Sie nicht direkt auf diese E-Mail."
+    else:
+        greeting = f"Hello {html.escape(s.name)},"
+        intro = ("thank you for your interest in L&A Gebäudereinigung. We have received your request "
+                 "and will get back to you personally within 24 hours.")
+        summary_label = "Summary of your request"
+        rows = [("Service", s.service), ("Location", s.location), ("Phone", s.phone)]
+        closing = "Best regards"
+        team = "Your L&A Gebäudereinigung team"
+        note = "This is an automatic confirmation. Please do not reply directly to this email."
+    tr = "".join(
+        f'<tr><td style="padding:8px 12px;color:#475569;font-size:13px;border-bottom:1px solid #E2E8F0">{k}</td>'
+        f'<td style="padding:8px 12px;color:#0F172A;font-size:14px;border-bottom:1px solid #E2E8F0">{html.escape(str(v))}</td></tr>'
+        for k, v in rows)
+    return (f'<table width="100%" cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;max-width:600px">'
+            f'<tr><td style="background:#0B2A6F;color:#fff;padding:22px 24px;font-size:18px;font-weight:bold">'
+            f'L&amp;A Gebäudereinigung</td></tr>'
+            f'<tr><td style="padding:24px">'
+            f'<p style="color:#0F172A;font-size:16px;font-weight:bold;margin:0 0 12px">{greeting}</p>'
+            f'<p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 20px">{intro}</p>'
+            f'<p style="color:#0F172A;font-size:13px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px">{summary_label}</p>'
+            f'<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">{tr}</table>'
+            f'<p style="color:#475569;font-size:14px;margin:24px 0 2px">{closing},</p>'
+            f'<p style="color:#0F172A;font-size:14px;font-weight:bold;margin:0">{team}</p>'
+            f'</td></tr>'
+            f'<tr><td style="padding:14px 24px;background:#F1F5F9;color:#94A3B8;font-size:11px">{note}</td></tr>'
+            f'</table>')
+
+
+async def send_customer_confirmation(s: ContactSubmission) -> bool:
+    if not RESEND_API_KEY:
+        logger.info("Customer confirmation skipped (RESEND_API_KEY not configured)")
+        return False
+    de = (s.language or "DE").upper() == "DE"
+    subject = ("Ihre Anfrage bei L&A Gebäudereinigung – wir haben sie erhalten"
+               if de else "Your inquiry at L&A Gebäudereinigung – we've received it")
+    params = {"from": SENDER_EMAIL, "to": [s.email], "subject": subject, "html": build_customer_email_html(s)}
+    try:
+        await asyncio.to_thread(resend.Emails.send, params)
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send customer confirmation: {e}")
         return False
 
 
@@ -213,7 +269,8 @@ async def create_contact(payload: ContactCreate):
     submission = ContactSubmission(**payload.model_dump())
     await db.contact_submissions.insert_one(submission.model_dump())
     sent = await send_notification(submission)
-    return ContactResponse(submission=submission, email_sent=sent)
+    confirmation = await send_customer_confirmation(submission)
+    return ContactResponse(submission=submission, email_sent=sent, confirmation_sent=confirmation)
 
 
 @api_router.get("/contact", response_model=List[ContactSubmission])

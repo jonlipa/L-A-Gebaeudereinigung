@@ -46,4 +46,9 @@ Create a professional demo website for a cleaning company based on its logo (L&A
 ## Backlog
 - P0: User still needs to supply REAL phone/email/address/owner/VAT → edit `src/config/site.js`, then set `isDemo: false`
 - P1: Verify own domain on Resend and set `SENDER_EMAIL` to e.g. `anfrage@la-gebaeudereinigung.de`; replace demo REVIEWS with real Google quotes
-- P2: Service detail modals; customer auto-reply email; service-area map
+- P2: service-area map
+
+## Implemented (2026-06, iteration 4)
+- **Customer auto-reply email**: `POST /api/contact` now also sends a branded, bilingual (DE/EN by `language`) confirmation email to the requester via Resend (`send_customer_confirmation` + `build_customer_email_html`). Response gains `confirmation_sent: bool`. NOTE: with sender `onboarding@resend.dev` the confirmation only actually reaches the Resend account owner's inbox (and Resend test addresses) until a domain is verified — same limitation as the admin notification.
+- **Service detail modals**: clicking any service card opens a shadcn Dialog (`ServiceModal` in `Services.jsx`) showing scope of work, pricing model and typical properties, plus a CTA that scrolls to the contact form. Bilingual content lives in `translations.js` under `services.details[key]` + `services.modal_*` labels. Cards no longer scroll straight to contact.
+- Self-tested: curl → `email_sent:true, confirmation_sent:true`; screenshot confirmed modal renders and CTA present.
