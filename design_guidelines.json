@@ -1,0 +1,464 @@
+{
+  "project_metadata": {
+    "title": "L&A Gebäudereinigung – Clean Service Demo Website",
+    "theme_type": "Light Corporate & Architectural Luxury",
+    "target_archetype": "Swiss Precision & High-Contrast Commercial Luxury",
+    "language_support": ["DE", "EN"],
+    "created_at": "2026-07-01"
+  },
+  "brand_assets": {
+    "company_name": "L&A Gebäudereinigung – Clean Service",
+    "short_name": "L&A Clean Service",
+    "logo_url": "https://customer-assets-gfyr7b9c.emergentagent.net/job_000f4ad1-ddb1-44d4-893c-dac6293ad204/artifacts/60kz20kt_image.png",
+    "experience_tagline": "20+ Years of Facility Engineering & Commercial Hygiene Excellence",
+    "tagline_de": "Erstklassige Gebäudereinigung für Gewerbe und Immobilien",
+    "tagline_en": "First-Class Commercial Building & Facility Cleaning Services"
+  },
+  "color_palette": {
+    "primary_navy": "#0B2A6F",
+    "deep_navy_dark": "#0A192F",
+    "accent_azure": "#1E7BF2",
+    "accent_cyan_bright": "#2FA0FF",
+    "accent_sky": "#E0F2FE",
+    "light_bg": "#F8FAFC",
+    "card_bg": "#FFFFFF",
+    "text_main": "#0F172A",
+    "text_muted": "#475569",
+    "border_subtle": "#E2E8F0",
+    "border_accent": "rgba(30, 123, 242, 0.2)"
+  },
+  "typography": {
+    "heading_font": "Plus Jakarta Sans, sans-serif",
+    "accent_display": "Playfair Display, serif",
+    "body_font": "Plus Jakarta Sans, sans-serif",
+    "mono_font": "JetBrains Mono, monospace",
+    "font_imports": [
+      "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap"
+    ],
+    "h1_hero": "text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08]",
+    "h2_section": "text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900",
+    "h3_card": "text-xl sm:text-2xl font-semibold tracking-tight text-slate-900",
+    "body_lg": "text-base sm:text-lg text-slate-600 leading-relaxed",
+    "overline": "text-xs uppercase tracking-[0.2em] font-bold text-sky-600 mb-2"
+  },
+  "image_urls": {
+    "hero_skyscraper": {
+      "url": "https://images.unsplash.com/photo-1787702320216-be3c4e9bdb73?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHw0fHxtb2Rlcm4lMjBjb21tZXJjaWFsJTIwYnVpbGRpbmclMjBza3lzY3JhcGVyJTIwZ2xhc3MlMjBmYWNhZGUlMjBjbGVhbmluZ3xlbnwwfHx8fDE3ODgyOTgxNzd8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Modern commercial skyscraper facade window cleaning",
+      "usage": "Hero section dynamic visual card and glass overlay effect"
+    },
+    "window_cleaner_rope": {
+      "url": "https://images.unsplash.com/photo-1782864840610-51d4c135a405?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBjbGVhbmluZyUyMHdvcmtlciUyMGluJTIwb2ZmaWNlJTIwd2luZG93JTIwY2xlYW5pbmd8ZW58MHx8fHwxNzg4Mjk4MTc3fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "High-altitude glass and window facade specialist",
+      "usage": "About section manifesto chapter 01 spotlight"
+    },
+    "office_interior_clean": {
+      "url": "https://images.unsplash.com/photo-1772001936267-b6058748eff4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHw0fHxjbGVhbiUyMG1vZGVybiUyMGNvcnBvcmF0ZSUyMG9mZmljZSUyMGludGVyaW9yJTIwbWluaW1hbGlzdHxlbnwwfHx8fDE3ODgyOTgxNzd8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Spotless corporate office glass partition interior",
+      "usage": "Services section main highlight feature card"
+    },
+    "corridor_minimalist": {
+      "url": "https://images.unsplash.com/photo-1779700314631-1f18b467e0a7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHwzfHxjbGVhbiUyMG1vZGVybiUyMGNvcnBvcmF0ZSUyMG9mZmljZSUyMGludGVyaW9yJTIwbWluaW1hbGlzdHxlbnwwfHx8fDE3ODgyOTgxNzd8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "High shine pristine building hallway",
+      "usage": "Advantages section visual showcase card"
+    }
+  },
+  "layout_and_sections": [
+    {
+      "section_id": "header",
+      "component": "StickyNavbar",
+      "description": "Glassmorphism header (backdrop-blur-xl bg-white/80 border-b border-slate-200/80), containing brand logo image, navigation links (About, Services, How It Works, Advantages, FAQ, Contact), DE/EN language switcher button, and primary CTA button 'Angebot anfordern / Request Quote'. Includes z-50 fixed hierarchy.",
+      "data_testids": [
+        "sticky-navbar",
+        "brand-logo",
+        "nav-link-about",
+        "nav-link-services",
+        "nav-link-how-it-works",
+        "nav-link-advantages",
+        "nav-link-faq",
+        "nav-link-contact",
+        "language-toggle-button",
+        "header-cta-button",
+        "admin-link"
+      ]
+    },
+    {
+      "section_id": "hero",
+      "component": "KineticHero",
+      "description": "Awwwards-level kinetic hero featuring line-by-line staggered reveal text, badge 'ISO 9001 & ISO 14001 Certified', 20+ years expertise callout, interactive glass wipe / squeegee sweep card effect (hover to simulate glass cleaning), dual CTAs ('Kostenloses Angebot' and 'Leistungen entdecken'), and trusted clients logo ticker.",
+      "data_testids": [
+        "hero-section",
+        "hero-badge",
+        "hero-title",
+        "hero-subtitle",
+        "hero-cta-primary",
+        "hero-cta-secondary",
+        "hero-interactive-glass-card",
+        "hero-experience-badge"
+      ]
+    },
+    {
+      "section_id": "editorial-marquee",
+      "component": "EditorialMarquee",
+      "description": "Slow, low-contrast continuous text ribbon displaying key industry values and certifications: 'GEBÄUDEREINIGUNG • GLAS- & FENSTERREINIGUNG • UNTERHALTSREINIGUNG • ECO CERTIFIED • 24/7 FLEIBILITÄT • DEUTSCHE QUALITÄT'.",
+      "data_testids": ["editorial-marquee-ribbon"]
+    },
+    {
+      "section_id": "about",
+      "component": "AboutManifesto",
+      "description": "Numbered manifesto chapters (01 Precision & Standards, 02 Eco-Hygiene Innovation, 03 Tailored Facility Care), treated spotlight photography with clipped frames, live counter stats (20+ Years Experience, 1,200+ Properties Cleaned, 99.8% Satisfaction, 100% Eco Solutions).",
+      "data_testids": [
+        "about-section",
+        "manifesto-chapter-01",
+        "manifesto-chapter-02",
+        "manifesto-chapter-03",
+        "stat-counter-experience",
+        "stat-counter-properties",
+        "stat-counter-satisfaction"
+      ]
+    },
+    {
+      "section_id": "services",
+      "component": "ServicesBentoGrid",
+      "description": "Asymmetric bento grid showcasing 6 core cleaning services: 1. Büroreinigung (Office Cleaning), 2. Glas- & Fensterreinigung (Window Cleaning), 3. Treppenhausreinigung (Stairwell Cleaning), 4. Industriereinigung (Industrial Cleaning), 5. Baugrob- & Feinreinigung (Construction Cleanup), 6. Unterhaltsreinigung (Maintenance Cleaning). Features tab filter, modal detail view, and custom icons.",
+      "data_testids": [
+        "services-section",
+        "service-card-office",
+        "service-card-glass",
+        "service-card-stairwell",
+        "service-card-industrial",
+        "service-card-construction",
+        "service-card-maintenance",
+        "service-detail-modal-trigger"
+      ]
+    },
+    {
+      "section_id": "how-it-works",
+      "component": "HowItWorksTimeline",
+      "description": "Numbered 4-step progressive timeline: 01. Kostenlose Erstbesichtigung (Free On-site Inspection), 02. Maßgeschneiderter Reinigungsplan (Custom Service Plan), 03. Professionelle Ausführung (Certified Execution), 04. Q-Audit & Betreuung (Continuous Quality Control).",
+      "data_testids": [
+        "how-it-works-section",
+        "step-1-inspection",
+        "step-2-plan",
+        "step-3-execution",
+        "step-4-audit"
+      ]
+    },
+    {
+      "section_id": "advantages",
+      "component": "AdvantagesBento",
+      "description": "Bento showcase highlights: 24/7 Shift Flexibility, Eco-Friendly Non-Toxic Cleaning Agents, Fully Insured & Vetted Staff, Modern Machinery, Transparent Flat-Rate Pricing.",
+      "data_testids": [
+        "advantages-section",
+        "advantage-card-eco",
+        "advantage-card-staff",
+        "advantage-card-insured",
+        "advantage-card-247"
+      ]
+    },
+    {
+      "section_id": "faq",
+      "component": "FaqAccordion",
+      "description": "Interactive FAQ accordion with category filter (General, Pricing, Security, Eco) answering key client questions in DE and EN.",
+      "data_testids": [
+        "faq-section",
+        "faq-search-input",
+        "faq-accordion-item"
+      ]
+    },
+    {
+      "section_id": "contact",
+      "component": "ContactFormSection",
+      "description": "High-converting corporate contact form section. Fields: Full Name, Phone Number, Email Address, Facility Location/City, Selected Service Dropdown, Message. Includes a dedicated 'Fill Demo Data' button for easy testing, instant submission handler that posts to database API, and Sonner toast success message.",
+      "data_testids": [
+        "contact-section",
+        "contact-form",
+        "input-name",
+        "input-phone",
+        "input-email",
+        "input-location",
+        "select-service",
+        "input-message",
+        "fill-demo-data-button",
+        "submit-contact-button",
+        "contact-info-phone",
+        "contact-info-email",
+        "contact-info-address"
+      ]
+    },
+    {
+      "section_id": "footer",
+      "component": "FooterSection",
+      "description": "Rich corporate footer with deep navy background, huge brand signature, address placeholders (Musterstraße 123, 10115 Berlin, Deutschland), phone (+49 (0) 30 12345678), email (info@la-gebaeudereinigung.de), working hours, legal links (Impressum, Datenschutz, AGB), and language switcher.",
+      "data_testids": [
+        "footer-section",
+        "footer-logo",
+        "footer-address-placeholder",
+        "footer-phone-placeholder",
+        "footer-email-placeholder",
+        "footer-impressum-link",
+        "footer-privacy-link",
+        "footer-admin-link"
+      ]
+    },
+    {
+      "section_id": "admin",
+      "component": "AdminSubmissionsPage",
+      "description": "Separate route at /admin displaying all contact form submissions stored in backend database. Features table with status badges (New, Contacted, In Progress, Archived), search by name/email/city, filter by service, delete action, export CSV button, and quick statistics counter.",
+      "data_testids": [
+        "admin-page-container",
+        "admin-search-input",
+        "admin-filter-service",
+        "admin-submissions-table",
+        "admin-submission-row",
+        "admin-delete-submission-button",
+        "admin-status-badge",
+        "admin-export-csv-button"
+      ]
+    }
+  ],
+  "i18n_translations": {
+    "DE": {
+      "nav": {
+        "about": "Über uns",
+        "services": "Leistungen",
+        "how_it_works": "Ablauf",
+        "advantages": "Vorteile",
+        "faq": "FAQ",
+        "contact": "Kontakt",
+        "cta": "Angebot anfordern",
+        "admin": "Admin"
+      },
+      "hero": {
+        "badge": "ISO 9001 & ISO 14001 ZERTIFIZIERT",
+        "title": "Perfektion & Glanz für Ihre Gewerbeimmobilie.",
+        "subtitle": "Seit über 20 Jahren stehen wir für höchste Qualitätsstandards in der Gebäudereinigung. Zuverlässig, umweltfreundlich und maßgeschneidert.",
+        "cta_primary": "Kostenloses Angebot anfordern",
+        "cta_secondary": "Unsere Leistungen entdecken",
+        "interactive_hint": "Fahren Sie über das Glas für den Vorher-Nachher Glanzeffekt"
+      },
+      "about": {
+        "tag": "ÜBER L&A GEBÄUDEREINIGUNG",
+        "title": "20 Jahre Erfahrung in gewerblicher Facility Hygiene",
+        "description": "L&A Gebäudereinigung ist Ihr kompetenter Partner für professionelle Sauberkeit. Wir verbinden traditionelles Handwerk mit modernster Reinigungstechnologie.",
+        "ch1_title": "01. Präzision & Standards",
+        "ch1_desc": "Regelmäßige Qualitätskontrollen und geschultes Fachpersonal garantieren lückenlose Sauberkeit in jedem Winkel.",
+        "ch2_title": "02. Ökologische Innovation",
+        "ch2_desc": "100% biologisch abbaubare Reinigungsmittel schonen Material und Umwelt ohne Kompromisse bei der Hygiene.",
+        "ch3_title": "03. Individuelle Konzepte",
+        "ch3_desc": "Flexible Reinigungszeiten außerhalb Ihrer Betriebszeiten – damit Ihr Arbeitsalltag ungestört bleibt."
+      },
+      "services": {
+        "tag": "UNSERE LEISTUNGEN",
+        "title": "Ganzheitliche Reinigungslösungen für Ihr Objekt",
+        "office": "Büroreinigung",
+        "office_desc": "Saubere Arbeitsplätze für maximale Produktivität. Tägliche oder wöchentliche Unterhaltsreinigung für Büro- & Verwaltungsgebäude.",
+        "glass": "Glas- & Fensterreinigung",
+        "glass_desc": "Streifenfreier Durchblick für Fassaden, Schaufenster und Glaskonstruktionen jeder Höhe mit professioneller Steiger- & Seiltechnik.",
+        "stairwell": "Treppenhausreinigung",
+        "stairwell_desc": "Repräsentativer Eingangsbereich für Wohn- und Geschäftshäuser. Gründliche Pflege von Stufen, Geländern und Fahrstühlen.",
+        "industrial": "Industriereinigung",
+        "industrial_desc": "Spezialreinigung für Produktionshallen, Lager und Maschinen unter Einhaltung strengster Sicherheitsvorschriften.",
+        "construction": "Baugrob- & Feinreinigung",
+        "construction_desc": "Fachgerechte Entsorgung von Baustoffresten und finale feine Übergabereinigung nach Neubau oder Sanierung.",
+        "maintenance": "Unterhaltsreinigung",
+        "maintenance_desc": "Kontinuierliche Pflege und Werterhalt Ihrer Immobilien durch regelmäßige Reinigungsintervalle nach Reinigungsplan."
+      },
+      "how_it_works": {
+        "tag": "SO EINFACH GEHT'S",
+        "title": "In 4 Schritten zu Ihrem sauberen Objekt",
+        "step1_title": "1. Besichtigung & Beratung",
+        "step1_desc": "Kostenlose Objektbegehung vor Ort zur Ermittlung des individuellen Bedarfs.",
+        "step2_title": "2. Maßgeschneidertes Angebot",
+        "step2_desc": "Transparente Festpreis-Kalkulation ohne versteckte Kosten innerhalb von 24 Stunden.",
+        "step3_title": "3. Professionelle Ausführung",
+        "step3_desc": "Pünktlicher Einsatz unseres zertifizierten Reinigungsteams nach Prüfprotokoll.",
+        "step4_title": "4. Qualitätskontrolle",
+        "step4_desc": "Regelmäßige Audits durch unseren Objektleiter zur nachhaltigen Qualitätssicherung."
+      },
+      "advantages": {
+        "tag": "IHRE VORTEILE",
+        "title": "Warum führende Unternehmen auf L&A vertrauen",
+        "adv1_title": "24/7 Einsatzflexibilität",
+        "adv1_desc": "Reinigung am frühen Morgen, späten Abend oder Wochenende ohne Aufpreis.",
+        "adv2_title": "100% Umweltzertifiziert",
+        "adv2_desc": "Einsatz von nachhaltigen, allergikerfreundlichen ECO-Reinigungsmitteln.",
+        "adv3_title": "Geprüftes Fachpersonal",
+        "adv3_desc": "Festangestellte Mitarbeiter mit Sicherheitsüberprüfung und Haftpflichtschutz.",
+        "adv4_title": "Transparente Kosten",
+        "adv4_desc": "Feste Monats- oder Quadratmeterpauschalen für volle Budgetkontrolle."
+      },
+      "faq": {
+        "tag": "HÄUFIGE FRAGEN",
+        "title": "Antworten auf Ihre wichtigsten Fragen",
+        "q1": "Wie schnell können Sie mit der Reinigung beginnen?",
+        "a1": "Nach Erstbesichtigung und Angebotserteilung können wir in der Regel innerhalb von 48 Stunden starten.",
+        "q2": "Sind Ihre Mitarbeiter haftpflichtversichert?",
+        "a2": "Ja, L&A ist umfassend betriebshaftpflichtversichert gegen Personen-, Sach- und Schlüsselverlustschäden.",
+        "q3": "Bieten Sie auch umweltfreundliche Reinigungsprodukte an?",
+        "a3": "Selbstverständlich. Wir nutzen standardmäßig zertifizierte Eco-Reiniger ohne schädliche Chemikalien.",
+        "q4": "Wie erfolgt die Abrechnung?",
+        "a4": "Sie erhalten eine übersichtliche Monatsrechnung mit detailliertem Leistungsnachweis."
+      },
+      "contact": {
+        "tag": "KONTAKT & ANFRAGE",
+        "title": "Fordern Sie jetzt Ihr unverbindliches Angebot an",
+        "subtitle": "Füllen Sie das Formular aus oder nutzen Sie die Demo-Daten für einen schnellen Test.",
+        "fill_demo": "Demo-Daten einfügen",
+        "name_label": "Name / Ansprechpartner *",
+        "phone_label": "Telefonnummer *",
+        "email_label": "E-Mail-Adresse *",
+        "location_label": "Standort / Ort des Objekts *",
+        "service_label": "Gewünschte Leistung *",
+        "message_label": "Ihre Nachricht / Objektgröße (m²)",
+        "submit_button": "Unverbindliches Angebot anfordern",
+        "submitting": "Wird gesendet...",
+        "success_toast": "Vielen Dank! Ihre Anfrage wurde erfolgreich übermittelt."
+      },
+      "admin": {
+        "title": "Admin Dashboard – Eingegangene Anfragen",
+        "subtitle": "Übersicht aller über das Kontaktformular übermittelten Leads",
+        "search_placeholder": "Nach Name, E-Mail oder Ort suchen...",
+        "status_new": "Neu",
+        "status_contacted": "Kontaktierte",
+        "status_closed": "Abgeschlossen",
+        "delete_confirm": "Möchten Sie diese Anfrage wirklich löschen?"
+      }
+    },
+    "EN": {
+      "nav": {
+        "about": "About Us",
+        "services": "Services",
+        "how_it_works": "Process",
+        "advantages": "Advantages",
+        "faq": "FAQ",
+        "contact": "Contact",
+        "cta": "Request Quote",
+        "admin": "Admin"
+      },
+      "hero": {
+        "badge": "ISO 9001 & ISO 14001 CERTIFIED",
+        "title": "Perfection & Brilliance for Commercial Real Estate.",
+        "subtitle": "For over 20 years, we have stood for the highest quality standards in building cleaning. Reliable, eco-friendly, and custom-tailored.",
+        "cta_primary": "Get Free Quote",
+        "cta_secondary": "Explore Services",
+        "interactive_hint": "Hover over the glass to reveal the before-after shine effect"
+      },
+      "about": {
+        "tag": "ABOUT L&A CLEAN SERVICE",
+        "title": "20 Years of Expertise in Commercial Facility Hygiene",
+        "description": "L&A Gebäudereinigung is your reliable partner for professional cleanliness, combining traditional craftsmanship with cutting-edge cleaning technology.",
+        "ch1_title": "01. Precision & Standards",
+        "ch1_desc": "Regular quality controls and certified staff guarantee complete cleanliness in every area.",
+        "ch2_title": "02. Eco-Hygiene Innovation",
+        "ch2_desc": "100% biodegradable cleaning agents protect surfaces and the environment without compromising hygiene.",
+        "ch3_title": "03. Tailored Concepts",
+        "ch3_desc": "Flexible schedules outside your business hours keep your daily operations uninterrupted."
+      },
+      "services": {
+        "tag": "OUR SERVICES",
+        "title": "Comprehensive Cleaning Solutions for Your Property",
+        "office": "Office Cleaning",
+        "office_desc": "Spotless workplaces for maximum productivity. Daily or weekly maintenance cleaning for corporate buildings.",
+        "glass": "Window & Glass Cleaning",
+        "glass_desc": "Streak-free clarity for facades, shop windows, and glass structures of any height using professional rope & lift technology.",
+        "stairwell": "Stairwell Cleaning",
+        "stairwell_desc": "Prestigious entrances for residential and commercial buildings. Thorough care of stairs, railings, and elevators.",
+        "industrial": "Industrial Cleaning",
+        "industrial_desc": "Specialized cleaning for production halls, warehouses, and machinery following strict safety regulations.",
+        "construction": "Post-Construction Cleaning",
+        "construction_desc": "Professional disposal of construction debris and final thorough handover cleaning after renovation or construction.",
+        "maintenance": "Facility Maintenance Cleaning",
+        "maintenance_desc": "Continuous care and value retention of your property through planned cleaning schedules."
+      },
+      "how_it_works": {
+        "tag": "HOW IT WORKS",
+        "title": "Your Property Cleaned in 4 Simple Steps",
+        "step1_title": "1. Site Inspection & Consultation",
+        "step1_desc": "Free initial on-site property walkthrough to assess specific requirements.",
+        "step2_title": "2. Tailored Quote",
+        "step2_desc": "Transparent fixed-price calculation without hidden costs within 24 hours.",
+        "step3_title": "3. Certified Execution",
+        "step3_desc": "Punctual deployment of our certified team following strict protocols.",
+        "step4_title": "4. Quality Control",
+        "step4_desc": "Regular audits by our property supervisor for long-term satisfaction."
+      },
+      "advantages": {
+        "tag": "OUR ADVANTAGES",
+        "title": "Why Leading Corporations Trust L&A",
+        "adv1_title": "24/7 Scheduling Flexibility",
+        "adv1_desc": "Early morning, late night, or weekend shifts at no extra charge.",
+        "adv2_title": "100% Eco-Certified",
+        "adv2_desc": "Exclusive use of sustainable, non-toxic, allergy-safe ECO detergents.",
+        "adv3_title": "Vetted Professional Staff",
+        "adv3_desc": "Permanent employees with background checks and comprehensive liability insurance.",
+        "adv4_title": "Transparent Pricing",
+        "adv4_desc": "Flat monthly or square-meter rates for total budget control."
+      },
+      "faq": {
+        "tag": "FREQUENTLY ASKED QUESTIONS",
+        "title": "Answers to Your Key Inquiries",
+        "q1": "How quickly can you start cleaning?",
+        "a1": "Following initial inspection and quote approval, we can typically commence within 48 hours.",
+        "q2": "Are your employees liability insured?",
+        "a2": "Yes, L&A is fully insured for commercial liability covering property, personal, and key replacement damages.",
+        "q3": "Do you offer eco-friendly cleaning options?",
+        "a3": "Absolutely. We standardly use eco-certified cleaners free of harsh toxic chemicals.",
+        "q4": "How does billing work?",
+        "a4": "You will receive a clear monthly invoice detailing all completed service schedules."
+      },
+      "contact": {
+        "tag": "CONTACT & INQUIRY",
+        "title": "Request Your Non-Binding Quote Today",
+        "subtitle": "Fill out the form below or use the demo fill button for instant testing.",
+        "fill_demo": "Fill Demo Data",
+        "name_label": "Full Name / Contact Person *",
+        "phone_label": "Phone Number *",
+        "email_label": "Email Address *",
+        "location_label": "Facility Location / City *",
+        "service_label": "Requested Service *",
+        "message_label": "Message / Facility Size (sqm)",
+        "submit_button": "Submit Quote Request",
+        "submitting": "Submitting...",
+        "success_toast": "Thank you! Your quote request has been submitted successfully."
+      },
+      "admin": {
+        "title": "Admin Dashboard – Submitted Leads",
+        "subtitle": "Overview of all customer inquiries received through the contact form",
+        "search_placeholder": "Search by name, email, or city...",
+        "status_new": "New",
+        "status_contacted": "Contacted",
+        "status_closed": "Closed",
+        "delete_confirm": "Are you sure you want to delete this submission?"
+      }
+    }
+  },
+  "demo_data": {
+    "name": "Dipl.-Ing. Markus Weber",
+    "phone": "+49 30 98765432",
+    "email": "m.weber@berlin-tech-park.de",
+    "location": "Berlin-Mitte / Alexanderplatz",
+    "service": "Büroreinigung",
+    "message": "Guten Tag, wir suchen ab nächstem Monat eine tägliche Büroreinigung für unsere 2.500 m² Bürofläche im Technologiepark Berlin."
+  },
+  "instructions_to_main_agent": [
+    "1. Setup Tailwind and Google fonts (Plus Jakarta Sans, Playfair Display) in index.html and index.css.",
+    "2. Implement Lenis smooth scrolling for smooth momentum scrolling across the landing page.",
+    "3. Build the DE/EN internationalization state context so all text toggles instantly when user clicks DE/EN.",
+    "4. Use framer-motion for masked line-by-line reveal in hero title and scroll-triggered fade/slide animations for sections.",
+    "5. Ensure Header has backdrop-blur glassmorphism background (#FFFFFF with opacity and backdrop-filter), z-50 fixed layer, and data-testid attributes.",
+    "6. Build the Interactive Glass Wipe card in Hero: hover or drag effect that moves a squeegee line uncovering pristine glass underlying photography.",
+    "7. Implement the Contact Form with local state and full backend DB integration (/api/contact or SQLite/FastAPI backend endpoint) so submissions persist and are displayed in /admin.",
+    "8. Implement the 'Fill Demo Data' button in Contact section which auto-populates inputs with valid test data.",
+    "9. Build the /admin page with a clean table view, search filter, status badges, and delete functionality.",
+    "10. Ensure EVERY interactive element has data-testid attribute adhering to the testid table guidelines."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Avoid generic centered SaaS layouts. Use asymmetric bento grids and crisp 1px borders (#E2E8F0) tinted with navy.",
+    "Never use dark gradients; keep background clean light slate (#F8FAFC) or crisp white with navy text for high APCA contrast.",
+    "Header must NEVER be fully transparent. Always apply backdrop-blur-xl with light white tint.",
+    "All buttons must have subtle spring animations on hover and active click states.",
+    "Use sonner for toast notifications when user submits form or fills demo data.",
+    "Add data-testid to every button, link, input, select, and key text element."
+  ]
+}
