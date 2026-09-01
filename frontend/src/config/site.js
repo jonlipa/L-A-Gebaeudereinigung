@@ -10,22 +10,22 @@ export const SITE = {
   shortName: "L&A Clean Service",
   url: "https://www.la-gebaeudereinigung.de", // TODO: replace with live domain
   logo: "https://customer-assets-gfyr7b9c.emergentagent.net/job_000f4ad1-ddb1-44d4-893c-dac6293ad204/artifacts/60kz20kt_image.png",
-  phone: "+49 (0) 30 12345678", // TODO: replace
-  phoneHref: "tel:+493012345678", // TODO: replace
+  phone: "+49 222 333 444", // TODO: replace
+  phoneHref: "tel:+49222333444", // TODO: replace
   email: "info@la-gebaeudereinigung.de", // TODO: replace
   address: {
-    street: "Musterstraße 123", // TODO: replace
-    city: "10115 Berlin", // TODO: replace
+    street: "Musterstraße 123", // TODO: replace with real street + number
+    city: "Krefeld", // TODO: add postal code (e.g. "47798 Krefeld")
     country: "Deutschland",
   },
   hours: {
     DE: "Mo – Fr: 07:00 – 19:00 Uhr · Sa: 08:00 – 14:00 Uhr",
     EN: "Mon – Fri: 7:00 am – 7:00 pm · Sat: 8:00 am – 2:00 pm",
   },
-  serviceArea: { DE: "Berlin & Brandenburg", EN: "Berlin & Brandenburg" }, // TODO: replace
+  serviceArea: { DE: "Krefeld & Umgebung", EN: "Krefeld & surrounding area" },
   foundedYear: 2004, // TODO: replace
   legal: {
-    owner: "Max Mustermann", // TODO: replace (Geschäftsführung / Inhaber)
+    owner: "Baton Haxhiu", // Geschäftsführung / Inhaber
     vatId: "DE123456789", // TODO: replace (USt-IdNr.) or leave "" if none
   },
   demoData: {

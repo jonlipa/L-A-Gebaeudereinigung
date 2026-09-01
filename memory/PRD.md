@@ -44,7 +44,7 @@ Create a professional demo website for a cleaning company based on its logo (L&A
 - Tested end-to-end (iteration_3: backend 21/21, frontend all pass).
 
 ## Backlog
-- P0: User still needs to supply REAL phone/email/address/owner/VAT → edit `src/config/site.js`, then set `isDemo: false`
+- P0 (Go Live blockers still open): real STREET + NUMBER, POSTAL CODE, and USt-IdNr. (or a "nicht umsatzsteuerpflichtig" note) — required for a legally valid Impressum before flipping `isDemo:false`. Applied so far: phone +49 222 333 444, email info@la-gebaeudereinigung.de, owner Baton Haxhiu, city/service area Krefeld & Umgebung (footer + FAQ region text updated). `isDemo` kept TRUE deliberately.
 - P1: Verify own domain on Resend and set `SENDER_EMAIL` to e.g. `anfrage@la-gebaeudereinigung.de`; replace demo REVIEWS with real Google quotes
 - P2: service-area map
 

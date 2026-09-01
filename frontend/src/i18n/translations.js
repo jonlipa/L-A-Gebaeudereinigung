@@ -232,7 +232,7 @@ export const translations = {
         },
         {
           q: "In welchen Regionen sind Sie tätig?",
-          a: "Wir betreuen Objekte in Berlin und Brandenburg. Für größere Projekte sind wir auch überregional im Einsatz.",
+          a: "Wir betreuen Objekte in Krefeld und Umgebung. Für größere Projekte sind wir auch überregional im Einsatz.",
         },
       ],
     },
@@ -264,7 +264,7 @@ export const translations = {
     },
     footer: {
       tagline: "Gebäudereinigung · Clean Service",
-      desc: "Professionelle Gebäudereinigung für Gewerbe, Industrie und Immobilienverwaltung. Seit 2004 in Berlin & Brandenburg.",
+      desc: "Professionelle Gebäudereinigung für Gewerbe, Industrie und Immobilienverwaltung. Seit 2004 in Krefeld & Umgebung.",
       nav: "Navigation",
       contact: "Kontakt",
       legal: "Rechtliches",
@@ -579,7 +579,7 @@ export const translations = {
         },
         {
           q: "Which regions do you serve?",
-          a: "We service properties across Berlin and Brandenburg. For larger projects we also operate nationwide.",
+          a: "We service properties across Krefeld and the surrounding area. For larger projects we also operate nationwide.",
         },
       ],
     },
@@ -611,7 +611,7 @@ export const translations = {
     },
     footer: {
       tagline: "Building Cleaning · Clean Service",
-      desc: "Professional building cleaning for commercial, industrial and property-management clients. Since 2004 in Berlin & Brandenburg.",
+      desc: "Professional building cleaning for commercial, industrial and property-management clients. Since 2004 in Krefeld & surrounding area.",
       nav: "Navigation",
       contact: "Contact",
       legal: "Legal",
