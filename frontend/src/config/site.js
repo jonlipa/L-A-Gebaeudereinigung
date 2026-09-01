@@ -39,3 +39,18 @@ export const IMAGES = {
   office: "https://images.unsplash.com/photo-1772001936267-b6058748eff4?crop=entropy&cs=srgb&fm=jpg&q=85&w=1400",
   corridor: "https://images.unsplash.com/photo-1779700314631-1f18b467e0a7?crop=entropy&cs=srgb&fm=jpg&q=85&w=1200",
 };
+
+export const BEFORE_AFTER = [
+  {
+    before: "https://static.prod-images.emergentagent.com/jobs/000f4ad1-ddb1-44d4-893c-dac6293ad204/images/7ab1bbb45c002170ad9b3e4e8496b203abaf9bc8a93d908b34d2fa19792a3cdd.jpeg",
+    after: "https://static.prod-images.emergentagent.com/jobs/000f4ad1-ddb1-44d4-893c-dac6293ad204/images/3dfc15976ec75648ca72ac12cbc09f62acd553ca8e90cf678180f04b0178c37f.jpeg",
+  },
+  {
+    before: "https://static.prod-images.emergentagent.com/jobs/000f4ad1-ddb1-44d4-893c-dac6293ad204/images/8e97965882c1a53a2671c99531bc3087970c67f4f472d9a2ed8703d71ccaec53.jpeg",
+    after: "https://static.prod-images.emergentagent.com/jobs/000f4ad1-ddb1-44d4-893c-dac6293ad204/images/d73fd9c83c96a6d527c6a6cdb58e409c4daa26368b9145d5ed532eb1ed355c3e.jpeg",
+  },
+  {
+    before: "https://static.prod-images.emergentagent.com/jobs/000f4ad1-ddb1-44d4-893c-dac6293ad204/images/26190d77979546d87a3ec6ac955ae52ce24e45b078b4eed63f02b8b052ede812.jpeg",
+    after: "https://static.prod-images.emergentagent.com/jobs/000f4ad1-ddb1-44d4-893c-dac6293ad204/images/2d83c4952abbbdbc28f26f8efdcbe67527d6a6f13d93d83d089459fcc044a60c.jpeg",
+  },
+];

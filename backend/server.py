@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -8,10 +8,12 @@ import logging
 import html
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
-from typing import List, Literal, Optional
+from typing import List, Literal
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import resend
+import bcrypt
+import jwt
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -29,10 +31,60 @@ NOTIFY_EMAIL = os.environ.get('NOTIFY_EMAIL', '')
 if RESEND_API_KEY:
     resend.api_key = RESEND_API_KEY
 
+JWT_SECRET = os.environ['JWT_SECRET']
+JWT_ALGORITHM = "HS256"
+ADMIN_EMAIL = os.environ['ADMIN_EMAIL'].lower()
+ADMIN_PASSWORD = os.environ['ADMIN_PASSWORD']
+
 app = FastAPI(title="L&A Gebäudereinigung API")
 api_router = APIRouter(prefix="/api")
 
 StatusType = Literal["new", "contacted", "closed"]
+
+
+# ---------------------------------------------------------------------------
+# Auth (single admin password gate)
+# ---------------------------------------------------------------------------
+def create_access_token(email: str) -> str:
+    payload = {
+        "sub": email,
+        "type": "access",
+        "exp": datetime.now(timezone.utc) + timedelta(hours=12),
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+async def require_admin(request: Request) -> str:
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header[7:] if auth_header.startswith("Bearer ") else None
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Session expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    if payload.get("sub", "").lower() != ADMIN_EMAIL:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return payload["sub"]
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class LoginResponse(BaseModel):
+    token: str
+    email: str
+
+
+_ADMIN_PASSWORD_HASH = bcrypt.hashpw(ADMIN_PASSWORD.encode("utf-8"), bcrypt.gensalt())
+
+
+def verify_password(plain: str) -> bool:
+    return bcrypt.checkpw(plain.encode("utf-8"), _ADMIN_PASSWORD_HASH)
 
 
 class ContactCreate(BaseModel):
@@ -93,6 +145,18 @@ async def root():
     return {"message": "L&A Gebäudereinigung API", "status": "ok"}
 
 
+@api_router.post("/auth/login", response_model=LoginResponse)
+async def login(body: LoginRequest):
+    if body.email.lower() != ADMIN_EMAIL or not verify_password(body.password):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    return LoginResponse(token=create_access_token(ADMIN_EMAIL), email=ADMIN_EMAIL)
+
+
+@api_router.get("/auth/me")
+async def me(admin: str = Depends(require_admin)):
+    return {"email": admin}
+
+
 @api_router.post("/contact", response_model=ContactResponse)
 async def create_contact(payload: ContactCreate):
     submission = ContactSubmission(**payload.model_dump())
@@ -102,13 +166,13 @@ async def create_contact(payload: ContactCreate):
 
 
 @api_router.get("/contact", response_model=List[ContactSubmission])
-async def list_contacts():
+async def list_contacts(admin: str = Depends(require_admin)):
     docs = await db.contact_submissions.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
     return [ContactSubmission(**d) for d in docs]
 
 
 @api_router.patch("/contact/{submission_id}/status", response_model=ContactSubmission)
-async def update_status(submission_id: str, body: StatusUpdate):
+async def update_status(submission_id: str, body: StatusUpdate, admin: str = Depends(require_admin)):
     res = await db.contact_submissions.find_one_and_update(
         {"id": submission_id}, {"$set": {"status": body.status}}, projection={"_id": 0}, return_document=True)
     if not res:
@@ -117,7 +181,7 @@ async def update_status(submission_id: str, body: StatusUpdate):
 
 
 @api_router.delete("/contact/{submission_id}")
-async def delete_contact(submission_id: str):
+async def delete_contact(submission_id: str, admin: str = Depends(require_admin)):
     res = await db.contact_submissions.delete_one({"id": submission_id})
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Submission not found")

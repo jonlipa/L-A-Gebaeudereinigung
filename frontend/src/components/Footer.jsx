@@ -68,9 +68,9 @@ export const Footer = () => {
           <div className="md:col-span-2">
             <p className="text-xs uppercase tracking-[0.22em] font-bold text-slate-500">{t.footer.legal}</p>
             <ul className="mt-5 space-y-3 text-sm text-slate-300">
-              <li><a data-testid="footer-impressum-link" href="#impressum" className="hover:text-white transition-colors">{t.footer.impressum}</a></li>
-              <li><a data-testid="footer-privacy-link" href="#datenschutz" className="hover:text-white transition-colors">{t.footer.privacy}</a></li>
-              <li><a data-testid="footer-terms-link" href="#agb" className="hover:text-white transition-colors">{t.footer.terms}</a></li>
+              <li><Link data-testid="footer-impressum-link" to="/impressum" className="hover:text-white transition-colors">{t.footer.impressum}</Link></li>
+              <li><Link data-testid="footer-privacy-link" to="/datenschutz" className="hover:text-white transition-colors">{t.footer.privacy}</Link></li>
+              <li><Link data-testid="footer-terms-link" to="/agb" className="hover:text-white transition-colors">{t.footer.terms}</Link></li>
               <li><Link data-testid="footer-admin-link" to="/admin" className="text-slate-500 hover:text-white transition-colors">{t.nav.admin}</Link></li>
             </ul>
           </div>

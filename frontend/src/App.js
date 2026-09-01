@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
+import Legal from "@/pages/Legal";
 
 const SmoothScroll = ({ children }) => {
   const { pathname } = useLocation();
@@ -32,6 +33,9 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/impressum" element={<Legal doc="impressum" />} />
+              <Route path="/datenschutz" element={<Legal doc="datenschutz" />} />
+              <Route path="/agb" element={<Legal doc="agb" />} />
             </Routes>
           </SmoothScroll>
           <Toaster position="top-right" richColors closeButton />

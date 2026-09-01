@@ -1,27 +1,36 @@
-"""Backend tests for L&A Gebäudereinigung API - contact submissions CRUD."""
+"""Backend tests for L&A Gebäudereinigung API - auth + contact endpoints."""
 import os
 import pytest
 import requests
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shine-solutions-demo.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+if not BASE_URL:
+    with open('/app/frontend/.env') as f:
+        for line in f:
+            if line.startswith('REACT_APP_BACKEND_URL='):
+                BASE_URL = line.split('=', 1)[1].strip().rstrip('/')
 API = f"{BASE_URL}/api"
 
-
-@pytest.fixture(scope="module")
-def session():
-    s = requests.Session()
-    s.headers.update({"Content-Type": "application/json"})
-    return s
+ADMIN_EMAIL = "jonlipaj23@gmail.com"
+ADMIN_PASSWORD = "LAClean2026!"
 
 
-@pytest.fixture(scope="module")
-def created_ids():
-    return []
+@pytest.fixture(scope="session")
+def token():
+    r = requests.post(f"{API}/auth/login",
+                      json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+    assert r.status_code == 200, r.text
+    return r.json()["token"]
+
+
+@pytest.fixture(scope="session")
+def auth_headers(token):
+    return {"Authorization": f"Bearer {token}"}
 
 
 def _payload(**overrides):
     p = {
-        "name": "TEST_John Doe",
+        "name": "TEST_John",
         "phone": "+49 170 1234567",
         "email": "test_john@example.com",
         "location": "Berlin",
@@ -34,90 +43,123 @@ def _payload(**overrides):
 
 
 # --- Health ---
-def test_root(session):
-    r = session.get(f"{API}/")
+def test_root():
+    r = requests.get(f"{API}/")
     assert r.status_code == 200
     assert r.json().get("status") == "ok"
 
 
-# --- Create ---
-def test_create_contact_valid(session, created_ids):
-    r = session.post(f"{API}/contact", json=_payload())
-    assert r.status_code == 200, r.text
-    data = r.json()
-    assert data["email_sent"] is False  # no RESEND key
-    sub = data["submission"]
-    assert sub["name"] == "TEST_John Doe"
-    assert sub["email"] == "test_john@example.com"
-    assert sub["status"] == "new"
-    assert "id" in sub and len(sub["id"]) > 10
-    assert "created_at" in sub
-    created_ids.append(sub["id"])
+# --- Auth ---
+class TestAuth:
+    def test_login_success(self):
+        r = requests.post(f"{API}/auth/login",
+                          json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+        assert r.status_code == 200
+        d = r.json()
+        assert d["email"].lower() == ADMIN_EMAIL
+        assert isinstance(d["token"], str) and len(d["token"]) > 20
+
+    def test_login_wrong_password(self):
+        r = requests.post(f"{API}/auth/login",
+                          json={"email": ADMIN_EMAIL, "password": "wrong"})
+        assert r.status_code == 401
+
+    def test_login_wrong_email(self):
+        r = requests.post(f"{API}/auth/login",
+                          json={"email": "nope@example.com", "password": ADMIN_PASSWORD})
+        assert r.status_code == 401
+
+    def test_me_with_token(self, auth_headers):
+        r = requests.get(f"{API}/auth/me", headers=auth_headers)
+        assert r.status_code == 200
+        assert r.json()["email"].lower() == ADMIN_EMAIL
+
+    def test_me_no_token(self):
+        r = requests.get(f"{API}/auth/me")
+        assert r.status_code == 401
+
+    def test_me_bad_token(self):
+        r = requests.get(f"{API}/auth/me",
+                         headers={"Authorization": "Bearer garbage.token.here"})
+        assert r.status_code == 401
 
 
-def test_create_contact_invalid_email(session):
-    r = session.post(f"{API}/contact", json=_payload(email="not-an-email"))
-    assert r.status_code == 422
+# --- Contact (public POST, protected list/update/delete) ---
+class TestContact:
+    created_id = None
 
-
-def test_create_contact_missing_field(session):
-    p = _payload()
-    del p["name"]
-    r = session.post(f"{API}/contact", json=p)
-    assert r.status_code == 422
-
-
-# --- List ---
-def test_list_contacts_sorted(session, created_ids):
-    # create a 2nd to verify order
-    r2 = session.post(f"{API}/contact", json=_payload(name="TEST_Second", email="test_second@example.com"))
-    assert r2.status_code == 200
-    created_ids.append(r2.json()["submission"]["id"])
-
-    r = session.get(f"{API}/contact")
-    assert r.status_code == 200
-    items = r.json()
-    assert isinstance(items, list)
-    assert len(items) >= 2
-    # sorted desc by created_at
-    dates = [i["created_at"] for i in items]
-    assert dates == sorted(dates, reverse=True)
-    # newest is our latest
-    assert items[0]["id"] == created_ids[-1]
-
-
-# --- Update status ---
-def test_update_status(session, created_ids):
-    sid = created_ids[0]
-    r = session.patch(f"{API}/contact/{sid}/status", json={"status": "contacted"})
-    assert r.status_code == 200, r.text
-    assert r.json()["status"] == "contacted"
-
-    # verify persisted
-    lr = session.get(f"{API}/contact")
-    match = [i for i in lr.json() if i["id"] == sid][0]
-    assert match["status"] == "contacted"
-
-
-def test_update_status_invalid_value(session, created_ids):
-    r = session.patch(f"{API}/contact/{created_ids[0]}/status", json={"status": "bogus"})
-    assert r.status_code == 422
-
-
-def test_update_status_unknown_id(session):
-    r = session.patch(f"{API}/contact/nonexistent-id/status", json={"status": "closed"})
-    assert r.status_code == 404
-
-
-# --- Delete ---
-def test_delete_contact(session, created_ids):
-    for sid in list(created_ids):
-        r = session.delete(f"{API}/contact/{sid}")
+    def test_create_contact_public(self):
+        r = requests.post(f"{API}/contact", json=_payload())
         assert r.status_code == 200, r.text
+        d = r.json()
+        assert d["email_sent"] is False  # RESEND_API_KEY empty
+        sub = d["submission"]
+        assert sub["name"] == "TEST_John"
+        assert sub["email"] == "test_john@example.com"
+        assert sub["status"] == "new"
+        assert "id" in sub
+        TestContact.created_id = sub["id"]
+
+    def test_create_invalid_email(self):
+        r = requests.post(f"{API}/contact", json=_payload(email="not-an-email"))
+        assert r.status_code == 422
+
+    def test_create_missing_field(self):
+        p = _payload()
+        del p["name"]
+        r = requests.post(f"{API}/contact", json=p)
+        assert r.status_code == 422
+
+    def test_list_no_auth(self):
+        r = requests.get(f"{API}/contact")
+        assert r.status_code == 401
+
+    def test_list_with_auth(self, auth_headers):
+        r = requests.get(f"{API}/contact", headers=auth_headers)
+        assert r.status_code == 200
+        lst = r.json()
+        assert isinstance(lst, list)
+        assert any(x["id"] == TestContact.created_id for x in lst)
+        # sorted desc
+        dates = [i["created_at"] for i in lst]
+        assert dates == sorted(dates, reverse=True)
+
+    def test_patch_status_no_auth(self):
+        r = requests.patch(f"{API}/contact/{TestContact.created_id}/status",
+                           json={"status": "contacted"})
+        assert r.status_code == 401
+
+    def test_patch_status_with_auth(self, auth_headers):
+        r = requests.patch(f"{API}/contact/{TestContact.created_id}/status",
+                           json={"status": "contacted"}, headers=auth_headers)
+        assert r.status_code == 200
+        assert r.json()["status"] == "contacted"
+
+    def test_patch_status_invalid_value(self, auth_headers):
+        r = requests.patch(f"{API}/contact/{TestContact.created_id}/status",
+                           json={"status": "bogus"}, headers=auth_headers)
+        assert r.status_code == 422
+
+    def test_patch_status_unknown_id(self, auth_headers):
+        r = requests.patch(f"{API}/contact/nonexistent-xyz/status",
+                           json={"status": "closed"}, headers=auth_headers)
+        assert r.status_code == 404
+
+    def test_delete_no_auth(self):
+        r = requests.delete(f"{API}/contact/{TestContact.created_id}")
+        assert r.status_code == 401
+
+    def test_delete_with_auth(self, auth_headers):
+        r = requests.delete(f"{API}/contact/{TestContact.created_id}",
+                            headers=auth_headers)
+        assert r.status_code == 200
         assert r.json()["deleted"] is True
-        created_ids.remove(sid)
 
+        # verify gone
+        r2 = requests.get(f"{API}/contact", headers=auth_headers)
+        assert not any(x["id"] == TestContact.created_id for x in r2.json())
 
-def test_delete_unknown_id(session):
-    r = session.delete(f"{API}/contact/does-not-exist-xyz")
-    assert r.status_code == 404
+    def test_delete_unknown_id(self, auth_headers):
+        r = requests.delete(f"{API}/contact/does-not-exist-xyz",
+                            headers=auth_headers)
+        assert r.status_code == 404

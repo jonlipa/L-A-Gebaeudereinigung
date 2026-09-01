@@ -29,8 +29,14 @@ Create a professional demo website for a cleaning company based on its logo (L&A
 - Admin dashboard: stats, search, service filter, status change, delete, CSV export
 - Tested end-to-end (iteration_1: all pass)
 
+## Implemented (2026-09)
+- **Admin Login gate**: `/admin` now requires JWT auth. Backend `POST /api/auth/login` + `GET /api/auth/me`; contact GET/PATCH/DELETE protected via `require_admin` (Bearer). POST /api/contact stays public. Password bcrypt-hashed at runtime from `ADMIN_PASSWORD` env; token in localStorage `la_admin_token`. Creds: jonlipaj23@gmail.com / LAClean2026! (see test_credentials.md).
+- **Email notifications wired ON**: `NOTIFY_EMAIL=jonlipaj23@gmail.com`. `RESEND_API_KEY` still empty → live sending OFF (email_sent=false), form submission unaffected. Add a `re_...` key to go live.
+- **Legal pages**: bilingual `/impressum`, `/datenschutz`, `/agb` (`pages/Legal.jsx`, content in translations `legal`), linked from footer via router Links. Contains demo placeholder legal text.
+- **Before/After gallery**: `components/BeforeAfter.jsx` — draggable comparison slider + 3 tabs (office/glass/stairwell), AI-generated demo photos in `config/site.js` BEFORE_AFTER.
+- Tested end-to-end (iteration_2: backend 19/19, frontend 100%, no issues). Backend pytest at `/app/backend/tests/backend_test.py`.
+
 ## Backlog
-- P0: Add real Resend API key + NOTIFY_EMAIL to enable email notifications
-- P1: Replace placeholder data in `src/config/site.js`; add Impressum/Datenschutz pages
-- P1: Protect /admin with a simple password
-- P2: Service detail modals, testimonials, before/after gallery
+- P0: Add real Resend API key to `/app/backend/.env` to enable live email sending
+- P1: Replace placeholder data in `src/config/site.js` and demo legal text with real content
+- P2: Add brute-force throttle / rate limit on `/api/auth/login`; service detail modals; testimonials

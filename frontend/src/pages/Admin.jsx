@@ -1,41 +1,142 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { ArrowLeft, Download, RefreshCw, Search, Trash2, Inbox } from "lucide-react";
+import { ArrowLeft, Download, RefreshCw, Search, Trash2, Inbox, Lock, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLang } from "@/i18n/LanguageContext";
 import { SITE } from "@/config/site";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const TOKEN_KEY = "la_admin_token";
 const STATUS_STYLE = {
   new: "bg-sky-soft text-navy border-azure/30",
   contacted: "bg-amber-50 text-amber-700 border-amber-200",
   closed: "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
 
-export default function Admin() {
+const errMsg = (e) => {
+  const d = e?.response?.data?.detail;
+  if (typeof d === "string") return d;
+  if (Array.isArray(d)) return d.map((x) => x.msg).join(" ");
+  return null;
+};
+
+function LoginScreen({ onLogin }) {
+  const { t, lang, toggle } = useLang();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const { data } = await axios.post(`${API}/auth/login`, { email, password });
+      localStorage.setItem(TOKEN_KEY, data.token);
+      onLogin(data.token);
+    } catch (ex) {
+      setError(errMsg(ex) || t.admin.login.error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div data-testid="admin-login-screen" className="min-h-screen bg-navy-deep text-white flex items-center justify-center px-5">
+      <div className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(to_right,rgba(255,255,255,0.4)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.4)_1px,transparent_1px)] [background-size:44px_44px]" />
+      <div className="relative w-full max-w-md">
+        <div className="flex items-center justify-between mb-8">
+          <Link to="/" className="inline-block rounded-2xl bg-white p-2.5">
+            <img src={SITE.logo} alt={SITE.name} className="h-10 w-auto" />
+          </Link>
+          <button data-testid="admin-login-language-toggle" onClick={toggle} className="rounded-full border border-white/20 px-3 py-1.5 text-xs font-bold hover:border-cyan-300 transition-colors">
+            {lang === "DE" ? "EN" : "DE"}
+          </button>
+        </div>
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur">
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-azure/20 text-cyan-300">
+            <Lock className="h-5 w-5" />
+          </span>
+          <h1 className="mt-6 text-2xl font-extrabold tracking-tight">{t.admin.login.title}</h1>
+          <p className="mt-2 text-sm text-slate-400">{t.admin.login.subtitle}</p>
+
+          <form onSubmit={submit} className="mt-8 space-y-4">
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">{t.admin.login.email}</label>
+              <Input
+                data-testid="admin-login-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-2 h-12 rounded-xl border-white/15 bg-white/5 text-white placeholder:text-slate-500"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">{t.admin.login.password}</label>
+              <Input
+                data-testid="admin-login-password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-2 h-12 rounded-xl border-white/15 bg-white/5 text-white placeholder:text-slate-500"
+              />
+            </div>
+            {error && (
+              <p data-testid="admin-login-error" className="text-sm text-red-400">{error}</p>
+            )}
+            <button
+              data-testid="admin-login-submit"
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 rounded-xl bg-cyan-400 text-navy-deep font-bold hover:bg-cyan-300 transition-colors disabled:opacity-60"
+            >
+              {loading ? t.admin.login.signing_in : t.admin.login.submit}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Dashboard({ token, onLogout }) {
   const { t, lang, toggle } = useLang();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [svc, setSvc] = useState("all");
 
-  const load = async () => {
+  const auth = useMemo(() => ({ headers: { Authorization: `Bearer ${token}` } }), [token]);
+
+  const handle401 = useCallback((e) => {
+    if (e?.response?.status === 401) {
+      onLogout();
+      return true;
+    }
+    return false;
+  }, [onLogout]);
+
+  const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`${API}/contact`);
+      const { data } = await axios.get(`${API}/contact`, auth);
       setRows(data);
-    } catch {
-      toast.error("Failed to load submissions");
+    } catch (e) {
+      if (!handle401(e)) toast.error("Failed to load submissions");
     } finally {
       setLoading(false);
     }
-  };
+  }, [auth, handle401]);
+
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const services = useMemo(() => [...new Set(rows.map((r) => r.service))], [rows]);
   const filtered = useMemo(() => {
@@ -53,16 +154,24 @@ export default function Admin() {
   );
 
   const setStatus = async (id, status) => {
-    const { data } = await axios.patch(`${API}/contact/${id}/status`, { status });
-    setRows((rs) => rs.map((r) => (r.id === id ? data : r)));
-    toast.success(t.admin.updated);
+    try {
+      const { data } = await axios.patch(`${API}/contact/${id}/status`, { status }, auth);
+      setRows((rs) => rs.map((r) => (r.id === id ? data : r)));
+      toast.success(t.admin.updated);
+    } catch (e) {
+      handle401(e);
+    }
   };
 
   const remove = async (id) => {
     if (!window.confirm(t.admin.delete_confirm)) return;
-    await axios.delete(`${API}/contact/${id}`);
-    setRows((rs) => rs.filter((r) => r.id !== id));
-    toast.success(t.admin.deleted);
+    try {
+      await axios.delete(`${API}/contact/${id}`, auth);
+      setRows((rs) => rs.filter((r) => r.id !== id));
+      toast.success(t.admin.deleted);
+    } catch (e) {
+      handle401(e);
+    }
   };
 
   const exportCsv = () => {
@@ -88,6 +197,10 @@ export default function Admin() {
           <div className="flex items-center gap-3">
             <button data-testid="admin-language-toggle" onClick={toggle} className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-bold text-navy">
               {lang === "DE" ? "EN" : "DE"}
+            </button>
+            <button data-testid="admin-logout-button" onClick={onLogout} className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:border-navy transition-colors">
+              <LogOut className="h-3.5 w-3.5" />
+              {t.admin.login.logout}
             </button>
             <Link data-testid="admin-back-link" to="/" className="inline-flex items-center gap-2 rounded-full bg-navy px-4 py-2 text-xs font-bold text-white hover:bg-azure transition-colors">
               <ArrowLeft className="h-3.5 w-3.5" />
@@ -202,4 +315,16 @@ export default function Admin() {
       </main>
     </div>
   );
+}
+
+export default function Admin() {
+  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
+
+  const logout = useCallback(() => {
+    localStorage.removeItem(TOKEN_KEY);
+    setToken(null);
+  }, []);
+
+  if (!token) return <LoginScreen onLogin={setToken} />;
+  return <Dashboard token={token} onLogout={logout} />;
 }
