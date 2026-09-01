@@ -48,6 +48,14 @@ Create a professional demo website for a cleaning company based on its logo (L&A
 - P1: Verify own domain on Resend and set `SENDER_EMAIL` to e.g. `anfrage@la-gebaeudereinigung.de`; replace demo REVIEWS with real Google quotes
 - P2: service-area map
 
+## Security Hardening (2026-06, iteration 4 — post audit)
+Security audit verdict was CONDITIONAL PASS. Applied & verified (backend 24/24, frontend 100%, iteration_4.json):
+- **SEC-001 contact-form abuse (was MEDIUM)**: `POST /api/contact` now rate-limited to 10 submissions/hour per client IP (`contact_events` Mongo collection, 24h TTL index) → 429 + Retry-After beyond that. Added a **honeypot** field (`website`) — non-empty ⇒ silently dropped (not stored, no email). Added a **daily email cap** (500/day) that skips dispatch when exceeded. Honeypot `website` never stored/returned (`exclude=True` on ContactSubmission).
+- **Login throttle bypass (LOW)**: `client_ip()` now derives the client IP from the trusted-proxy hop count (`TRUSTED_PROXY_HOPS` env, default 1) taken from the right of `X-Forwarded-For`, instead of the raw spoofable header.
+- **Timing side channel (LOW)**: login now runs a bcrypt comparison against a dummy hash on the wrong-email path → constant-time, no longer reveals a valid admin email.
+- **CORS (LOW)**: `allow_credentials=False` (app uses bearer tokens, not cookies) → removes the wildcard-origin-with-credentials misconfig.
+- NOT done (deferred, needs user input / bigger change): CAPTCHA (needs a site key), moving JWT out of localStorage into an HttpOnly cookie, rotating secrets to a managed store.
+
 ## Implemented (2026-06, iteration 4)
 - **Customer auto-reply email**: `POST /api/contact` now also sends a branded, bilingual (DE/EN by `language`) confirmation email to the requester via Resend (`send_customer_confirmation` + `build_customer_email_html`). Response gains `confirmation_sent: bool`. NOTE: with sender `onboarding@resend.dev` the confirmation only actually reaches the Resend account owner's inbox (and Resend test addresses) until a domain is verified — same limitation as the admin notification.
 - **Service detail modals**: clicking any service card opens a shadcn Dialog (`ServiceModal` in `Services.jsx`) showing scope of work, pricing model and typical properties, plus a CTA that scrolls to the contact form. Bilingual content lives in `translations.js` under `services.details[key]` + `services.modal_*` labels. Cards no longer scroll straight to contact.

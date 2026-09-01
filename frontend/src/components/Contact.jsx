@@ -33,6 +33,7 @@ const InfoRow = ({ icon: Icon, label, value, href, testId }) => (
 export const Contact = () => {
   const { t, lang } = useLang();
   const [form, setForm] = useState(EMPTY);
+  const [hp, setHp] = useState("");
   const [loading, setLoading] = useState(false);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -53,9 +54,11 @@ export const Contact = () => {
         ...form,
         service: t.services.items[form.service]?.title || form.service,
         language: lang,
+        website: hp,
       });
       toast.success(t.contact.success, { description: t.contact.success_desc });
       setForm(EMPTY);
+      setHp("");
     } catch {
       toast.error(t.contact.error);
     } finally {
@@ -92,6 +95,17 @@ export const Contact = () => {
 
           <Reveal delay={0.1} className="lg:col-span-7">
             <form data-testid="contact-form" onSubmit={submit} className="rounded-[28px] border border-slate-200 bg-paper p-8 sm:p-10">
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                data-testid="hp-website"
+                value={hp}
+                onChange={(e) => setHp(e.target.value)}
+                className="hidden"
+              />
               <div className="flex items-center justify-between gap-4 mb-8">
                 <p className="font-mono text-xs uppercase tracking-widest text-slate-400">Form · {lang}</p>
                 {SITE.isDemo && (

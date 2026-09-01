@@ -232,3 +232,84 @@ class TestLoginThrottle:
         r = requests.post(f"{API}/auth/login",
                           json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
         assert r.status_code == 200, r.text
+
+
+
+# --- SEC-001 Honeypot + per-IP contact rate limit ---
+class TestSecurityHardening:
+    def test_honeypot_silent_drop(self, auth_headers):
+        # Get baseline list
+        r0 = requests.get(f"{API}/contact", headers=auth_headers)
+        assert r0.status_code == 200
+        before_ids = {x["id"] for x in r0.json()}
+
+        # Submit with honeypot 'website' filled
+        r = requests.post(f"{API}/contact",
+                          json=_payload(name="HP_BOT", email="delivered@resend.dev",
+                                        website="http://spam.example.com/"))
+        assert r.status_code == 200, r.text
+        d = r.json()
+        assert d["email_sent"] is False
+        assert d["confirmation_sent"] is False
+        # website field must not appear anywhere in response
+        assert "website" not in d["submission"], d["submission"]
+        assert "website" not in r.text, "honeypot field leaked in response"
+
+        # Verify NOT persisted in admin list
+        r2 = requests.get(f"{API}/contact", headers=auth_headers)
+        after_ids = {x["id"] for x in r2.json()}
+        assert after_ids == before_ids, "Honeypot submission was persisted!"
+        # Also confirm the returned dummy id isn't in the list
+        assert d["submission"]["id"] not in after_ids
+
+    def test_normal_submission_no_website_ok(self, auth_headers):
+        r = requests.post(f"{API}/contact",
+                          json=_payload(name="HP_NORMAL", email="delivered@resend.dev"))
+        assert r.status_code == 200, r.text
+        d = r.json()
+        assert d["email_sent"] is True
+        assert d["confirmation_sent"] is True
+        assert "website" not in d["submission"]
+        sid = d["submission"]["id"]
+
+        # Retrievable via protected list
+        r2 = requests.get(f"{API}/contact", headers=auth_headers)
+        assert r2.status_code == 200
+        assert any(x["id"] == sid for x in r2.json())
+
+        # Cleanup
+        requests.delete(f"{API}/contact/{sid}", headers=auth_headers)
+
+    def test_contact_rate_limit_10_per_hour(self, auth_headers):
+        """Run LAST: exhausts the per-IP 10/hour cap. Cleans contact_events after."""
+        # Clean slate first
+        import subprocess
+        subprocess.run(
+            ["mongosh", "--quiet", "test_database", "--eval",
+             'db.contact_events.deleteMany({})'],
+            capture_output=True, check=False)
+
+        ok_count = 0
+        rate_limited = False
+        for i in range(12):
+            r = requests.post(f"{API}/contact",
+                              json=_payload(name=f"HP_RL_{i}",
+                                            email="delivered@resend.dev"))
+            if r.status_code == 200:
+                ok_count += 1
+                sid = r.json()["submission"]["id"]
+                # cleanup as we go
+                requests.delete(f"{API}/contact/{sid}", headers=auth_headers)
+            elif r.status_code == 429:
+                rate_limited = True
+                assert "Retry-After" in r.headers
+                break
+
+        assert ok_count == 10, f"Expected 10 successful posts before 429, got {ok_count}"
+        assert rate_limited, "Rate limit (429) was never triggered after 10 posts"
+
+        # cleanup contact_events so subsequent runs are unaffected
+        subprocess.run(
+            ["mongosh", "--quiet", "test_database", "--eval",
+             'db.contact_events.deleteMany({})'],
+            capture_output=True, check=False)

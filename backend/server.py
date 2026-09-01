@@ -81,6 +81,7 @@ class LoginResponse(BaseModel):
 
 
 _ADMIN_PASSWORD_HASH = bcrypt.hashpw(ADMIN_PASSWORD.encode("utf-8"), bcrypt.gensalt())
+_DUMMY_HASH = bcrypt.hashpw(b"timing-attack-mitigation-dummy", bcrypt.gensalt())
 
 
 def verify_password(plain: str) -> bool:
@@ -95,10 +96,12 @@ class ContactCreate(BaseModel):
     service: str = Field(min_length=2, max_length=80)
     message: str = Field(default="", max_length=2000)
     language: str = Field(default="DE", max_length=2)
+    website: str = Field(default="", max_length=200)  # honeypot – must stay empty
 
 
 class ContactSubmission(ContactCreate):
     model_config = ConfigDict(extra="ignore")
+    website: str = Field(default="", exclude=True)  # never stored / returned
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     status: StatusType = "new"
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
@@ -203,11 +206,18 @@ async def root():
 
 MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_MINUTES = 15
+TRUSTED_PROXY_HOPS = int(os.environ.get("TRUSTED_PROXY_HOPS", "1"))
+CONTACT_MAX_PER_HOUR = 10
+CONTACT_DAILY_EMAIL_CAP = 500
 
 
 def client_ip(request: Request) -> str:
-    fwd = request.headers.get("X-Forwarded-For", "")
-    return fwd.split(",")[-1].strip() if fwd else (request.client.host if request.client else "unknown")
+    # Take the IP added by our own trusted proxy hop, not the leftmost client-controlled value.
+    fwd = [p.strip() for p in request.headers.get("X-Forwarded-For", "").split(",") if p.strip()]
+    if fwd:
+        idx = min(TRUSTED_PROXY_HOPS, len(fwd))
+        return fwd[-idx]
+    return request.client.host if request.client else "unknown"
 
 
 async def check_lockout(identifier: str) -> None:
@@ -247,7 +257,13 @@ async def login(body: LoginRequest, request: Request):
     email = body.email.lower()
     identifier = f"{client_ip(request)}:{email}"
     await check_lockout(identifier)
-    if email != ADMIN_EMAIL or not verify_password(body.password):
+    email_ok = email == ADMIN_EMAIL
+    if email_ok:
+        password_ok = verify_password(body.password)
+    else:
+        bcrypt.checkpw(body.password.encode("utf-8"), _DUMMY_HASH)  # constant-time: run bcrypt on wrong-email path too
+        password_ok = False
+    if not (email_ok and password_ok):
         count = await record_failed_attempt(identifier)
         remaining = MAX_LOGIN_ATTEMPTS - count
         if remaining <= 0:
@@ -264,12 +280,36 @@ async def me(admin: str = Depends(require_admin)):
     return {"email": admin}
 
 
+async def contact_rate_check(ip: str) -> None:
+    hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+    count = await db.contact_events.count_documents({"ip": ip, "ts": {"$gte": hour_ago}})
+    if count >= CONTACT_MAX_PER_HOUR:
+        raise HTTPException(status_code=429, detail="Too many requests. Please try again later.",
+                            headers={"Retry-After": "3600"})
+
+
+async def daily_send_allowed() -> bool:
+    start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    return await db.contact_events.count_documents({"ts": {"$gte": start}}) <= CONTACT_DAILY_EMAIL_CAP
+
+
 @api_router.post("/contact", response_model=ContactResponse)
-async def create_contact(payload: ContactCreate):
-    submission = ContactSubmission(**payload.model_dump())
+async def create_contact(payload: ContactCreate, request: Request):
+    if payload.website.strip():  # honeypot filled → bot; silently drop
+        logger.info("Contact honeypot triggered; submission dropped")
+        dummy = ContactSubmission(**payload.model_dump(exclude={"website"}))
+        return ContactResponse(submission=dummy, email_sent=False, confirmation_sent=False)
+    ip = client_ip(request)
+    await contact_rate_check(ip)
+    await db.contact_events.insert_one({"ip": ip, "ts": datetime.now(timezone.utc)})
+    submission = ContactSubmission(**payload.model_dump(exclude={"website"}))
     await db.contact_submissions.insert_one(submission.model_dump())
-    sent = await send_notification(submission)
-    confirmation = await send_customer_confirmation(submission)
+    if await daily_send_allowed():
+        sent = await send_notification(submission)
+        confirmation = await send_customer_confirmation(submission)
+    else:
+        logger.warning("Daily contact email cap reached; skipping email dispatch")
+        sent = confirmation = False
     return ContactResponse(submission=submission, email_sent=sent, confirmation_sent=confirmation)
 
 
@@ -300,7 +340,7 @@ app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
     allow_methods=["*"],
     allow_headers=["*"],
@@ -311,6 +351,8 @@ app.add_middleware(
 async def create_indexes():
     await db.login_attempts.create_index("identifier", unique=True)
     await db.contact_submissions.create_index("created_at")
+    await db.contact_events.create_index("ip")
+    await db.contact_events.create_index("ts", expireAfterSeconds=86400)
 
 
 @app.on_event("shutdown")
