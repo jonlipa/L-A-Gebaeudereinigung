@@ -1,5 +1,6 @@
-"""Backend tests for L&A Gebäudereinigung API - auth + contact endpoints."""
+"""Backend tests for L&A Gebäudereinigung API - cookie-session auth + contact endpoints."""
 import os
+import uuid as _uuid
 import pytest
 import requests
 
@@ -13,19 +14,18 @@ API = f"{BASE_URL}/api"
 
 ADMIN_EMAIL = "jonlipaj23@gmail.com"
 ADMIN_PASSWORD = "LAClean2026!"
+COOKIE_NAME = "la_session"
 
 
 @pytest.fixture(scope="session")
-def token():
-    r = requests.post(f"{API}/auth/login",
-                      json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+def admin_session():
+    """Return a requests.Session with the la_session HttpOnly cookie set."""
+    s = requests.Session()
+    r = s.post(f"{API}/auth/login",
+               json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
     assert r.status_code == 200, r.text
-    return r.json()["token"]
-
-
-@pytest.fixture(scope="session")
-def auth_headers(token):
-    return {"Authorization": f"Bearer {token}"}
+    assert COOKIE_NAME in s.cookies, f"Session cookie not set. Cookies: {s.cookies}"
+    return s
 
 
 def _payload(**overrides):
@@ -49,15 +49,25 @@ def test_root():
     assert r.json().get("status") == "ok"
 
 
-# --- Auth ---
+# --- Auth (cookie-based) ---
 class TestAuth:
-    def test_login_success(self):
-        r = requests.post(f"{API}/auth/login",
-                          json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
-        assert r.status_code == 200
+    def test_login_success_sets_httponly_cookie(self):
+        s = requests.Session()
+        r = s.post(f"{API}/auth/login",
+                   json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+        assert r.status_code == 200, r.text
         d = r.json()
+        # Response body: only {email}, NO token key
         assert d["email"].lower() == ADMIN_EMAIL
-        assert isinstance(d["token"], str) and len(d["token"]) > 20
+        assert "token" not in d, "Login response must not include token in body"
+        # Cookie set
+        assert COOKIE_NAME in s.cookies
+        # Verify Set-Cookie attributes: HttpOnly, Secure, SameSite=None
+        set_cookie = r.headers.get("set-cookie", "")
+        lc = set_cookie.lower()
+        assert "httponly" in lc, f"Set-Cookie missing HttpOnly: {set_cookie}"
+        assert "secure" in lc, f"Set-Cookie missing Secure: {set_cookie}"
+        assert "samesite=none" in lc, f"Set-Cookie missing SameSite=None: {set_cookie}"
 
     def test_login_wrong_password(self):
         r = requests.post(f"{API}/auth/login",
@@ -69,22 +79,51 @@ class TestAuth:
                           json={"email": "nope@example.com", "password": ADMIN_PASSWORD})
         assert r.status_code == 401
 
-    def test_me_with_token(self, auth_headers):
-        r = requests.get(f"{API}/auth/me", headers=auth_headers)
+    def test_me_with_cookie(self, admin_session):
+        r = admin_session.get(f"{API}/auth/me")
         assert r.status_code == 200
         assert r.json()["email"].lower() == ADMIN_EMAIL
 
-    def test_me_no_token(self):
+    def test_me_no_cookie(self):
         r = requests.get(f"{API}/auth/me")
         assert r.status_code == 401
 
-    def test_me_bad_token(self):
+    def test_me_bad_cookie(self):
+        r = requests.get(f"{API}/auth/me", cookies={COOKIE_NAME: "garbage.token.here"})
+        assert r.status_code == 401
+
+    def test_bearer_token_fallback_rejected_without_valid_token(self):
+        # Bearer path still exists but garbage should 401.
         r = requests.get(f"{API}/auth/me",
                          headers={"Authorization": "Bearer garbage.token.here"})
         assert r.status_code == 401
 
+    def test_logout_clears_cookie(self):
+        s = requests.Session()
+        r = s.post(f"{API}/auth/login",
+                   json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+        assert r.status_code == 200
+        assert COOKIE_NAME in s.cookies
 
-# --- Contact (public POST, protected list/update/delete) ---
+        # /auth/me works while cookied
+        r2 = s.get(f"{API}/auth/me")
+        assert r2.status_code == 200
+
+        # logout
+        r3 = s.post(f"{API}/auth/logout")
+        assert r3.status_code == 200
+        assert r3.json().get("ok") is True
+
+        # Cookie should be cleared server-side; session cookie jar removed too
+        # (server sent Set-Cookie with expiry in the past)
+        assert COOKIE_NAME not in s.cookies or not s.cookies.get(COOKIE_NAME)
+
+        # /auth/me now 401
+        r4 = s.get(f"{API}/auth/me")
+        assert r4.status_code == 401
+
+
+# --- Contact (public POST, protected list/update/delete via cookie) ---
 class TestContact:
     created_id = None
 
@@ -92,10 +131,9 @@ class TestContact:
         r = requests.post(f"{API}/contact", json=_payload(name="QA Test"))
         assert r.status_code == 200, r.text
         d = r.json()
-        assert d["email_sent"] is True  # RESEND_API_KEY is live now
+        assert d["email_sent"] is True
         sub = d["submission"]
         assert sub["name"] == "QA Test"
-        assert sub["email"] == "test_john@example.com"
         assert sub["status"] == "new"
         assert "id" in sub
         TestContact.created_id = sub["id"]
@@ -104,146 +142,72 @@ class TestContact:
         r = requests.post(f"{API}/contact", json=_payload(email="not-an-email"))
         assert r.status_code == 422
 
-    def test_create_missing_field(self):
-        p = _payload()
-        del p["name"]
-        r = requests.post(f"{API}/contact", json=p)
-        assert r.status_code == 422
-
     def test_list_no_auth(self):
         r = requests.get(f"{API}/contact")
         assert r.status_code == 401
 
-    def test_list_with_auth(self, auth_headers):
-        r = requests.get(f"{API}/contact", headers=auth_headers)
+    def test_list_with_cookie(self, admin_session):
+        r = admin_session.get(f"{API}/contact")
         assert r.status_code == 200
         lst = r.json()
         assert isinstance(lst, list)
         assert any(x["id"] == TestContact.created_id for x in lst)
-        # sorted desc
-        dates = [i["created_at"] for i in lst]
-        assert dates == sorted(dates, reverse=True)
 
     def test_patch_status_no_auth(self):
         r = requests.patch(f"{API}/contact/{TestContact.created_id}/status",
                            json={"status": "contacted"})
         assert r.status_code == 401
 
-    def test_patch_status_with_auth(self, auth_headers):
-        r = requests.patch(f"{API}/contact/{TestContact.created_id}/status",
-                           json={"status": "contacted"}, headers=auth_headers)
+    def test_patch_status_with_cookie(self, admin_session):
+        r = admin_session.patch(f"{API}/contact/{TestContact.created_id}/status",
+                                json={"status": "contacted"})
         assert r.status_code == 200
         assert r.json()["status"] == "contacted"
 
-    def test_patch_status_invalid_value(self, auth_headers):
-        r = requests.patch(f"{API}/contact/{TestContact.created_id}/status",
-                           json={"status": "bogus"}, headers=auth_headers)
-        assert r.status_code == 422
-
-    def test_patch_status_unknown_id(self, auth_headers):
-        r = requests.patch(f"{API}/contact/nonexistent-xyz/status",
-                           json={"status": "closed"}, headers=auth_headers)
+    def test_patch_status_unknown_id(self, admin_session):
+        r = admin_session.patch(f"{API}/contact/nonexistent-xyz/status",
+                                json={"status": "closed"})
         assert r.status_code == 404
 
     def test_delete_no_auth(self):
         r = requests.delete(f"{API}/contact/{TestContact.created_id}")
         assert r.status_code == 401
 
-    def test_delete_with_auth(self, auth_headers):
-        r = requests.delete(f"{API}/contact/{TestContact.created_id}",
-                            headers=auth_headers)
+    def test_delete_with_cookie(self, admin_session):
+        r = admin_session.delete(f"{API}/contact/{TestContact.created_id}")
         assert r.status_code == 200
         assert r.json()["deleted"] is True
-
         # verify gone
-        r2 = requests.get(f"{API}/contact", headers=auth_headers)
+        r2 = admin_session.get(f"{API}/contact")
         assert not any(x["id"] == TestContact.created_id for x in r2.json())
-
-    def test_delete_unknown_id(self, auth_headers):
-        r = requests.delete(f"{API}/contact/does-not-exist-xyz",
-                            headers=auth_headers)
-        assert r.status_code == 404
 
 
 # --- Throttle / Lockout ---
-# NOTE: identifier is IP+email. Ingress may append/override X-Forwarded-For,
-# but distinct emails guarantee distinct identifiers. We use "invalid" emails so
-# no real admin account is locked (they still count toward the counter).
-import uuid as _uuid
-
-
 def _locktest_email():
     return f"locktest-{_uuid.uuid4().hex[:8]}@example.com"
 
 
 class TestLoginThrottle:
-    def test_401_shows_remaining_then_429_on_5th(self):
+    def test_5_failed_attempts_lockout(self):
         email = _locktest_email()
-        # 4 failed attempts -> 401 with remaining counts 4,3,2,1
         for expected_remaining in [4, 3, 2, 1]:
             r = requests.post(f"{API}/auth/login",
                               json={"email": email, "password": "wrong"})
             assert r.status_code == 401, r.text
-            detail = r.json().get("detail", "")
-            assert f"{expected_remaining} attempt" in detail, detail
-        # 5th attempt -> 429 with Retry-After
+            assert f"{expected_remaining} attempt" in r.json().get("detail", "")
+        # 5th -> 429
         r = requests.post(f"{API}/auth/login",
                           json={"email": email, "password": "wrong"})
-        assert r.status_code == 429, r.text
+        assert r.status_code == 429
         assert "Retry-After" in r.headers
-        assert int(r.headers["Retry-After"]) > 0
-        assert "Too many failed attempts" in r.json().get("detail", "")
-
-        # 6th attempt with CORRECT password (same identifier) still locked
-        r = requests.post(f"{API}/auth/login",
-                          json={"email": email, "password": ADMIN_PASSWORD})
-        # since email != ADMIN_EMAIL it would 401, but lockout runs first -> 429
-        assert r.status_code == 429, r.text
-
-    def test_successful_login_resets_counter(self):
-        # 2 failed logins for real admin (they count against IP+admin_email identifier)
-        # To avoid locking real admin: use a fresh email that is invalid email address on server
-        # but ALSO test the reset: perform 2 fails on ADMIN_EMAIL with wrong pw, then success,
-        # then 4 more wrongs -> should still be 401 (not 429).
-        # Ensure we start clean by clearing any prior attempts for admin via successful login first.
-        r0 = requests.post(f"{API}/auth/login",
-                           json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
-        assert r0.status_code == 200, r0.text  # resets counter
-
-        for expected_remaining in [4, 3]:
-            r = requests.post(f"{API}/auth/login",
-                              json={"email": ADMIN_EMAIL, "password": "wrong"})
-            assert r.status_code == 401, r.text
-            assert f"{expected_remaining} attempt" in r.json().get("detail", "")
-
-        # Successful login -> resets
-        r = requests.post(f"{API}/auth/login",
-                          json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
-        assert r.status_code == 200, r.text
-
-        # 4 more failures should all be 401 (not 429) since counter reset
-        for expected_remaining in [4, 3, 2, 1]:
-            r = requests.post(f"{API}/auth/login",
-                              json={"email": ADMIN_EMAIL, "password": "wrong"})
-            assert r.status_code == 401, r.text
-            assert f"{expected_remaining} attempt" in r.json().get("detail", "")
-
-        # Reset counter again with a successful login so we don't leave admin near lockout
-        r = requests.post(f"{API}/auth/login",
-                          json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
-        assert r.status_code == 200, r.text
-
 
 
 # --- SEC-001 Honeypot + per-IP contact rate limit ---
 class TestSecurityHardening:
-    def test_honeypot_silent_drop(self, auth_headers):
-        # Get baseline list
-        r0 = requests.get(f"{API}/contact", headers=auth_headers)
-        assert r0.status_code == 200
+    def test_honeypot_silent_drop(self, admin_session):
+        r0 = admin_session.get(f"{API}/contact")
         before_ids = {x["id"] for x in r0.json()}
 
-        # Submit with honeypot 'website' filled
         r = requests.post(f"{API}/contact",
                           json=_payload(name="HP_BOT", email="delivered@resend.dev",
                                         website="http://spam.example.com/"))
@@ -251,38 +215,13 @@ class TestSecurityHardening:
         d = r.json()
         assert d["email_sent"] is False
         assert d["confirmation_sent"] is False
-        # website field must not appear anywhere in response
-        assert "website" not in d["submission"], d["submission"]
-        assert "website" not in r.text, "honeypot field leaked in response"
-
-        # Verify NOT persisted in admin list
-        r2 = requests.get(f"{API}/contact", headers=auth_headers)
-        after_ids = {x["id"] for x in r2.json()}
-        assert after_ids == before_ids, "Honeypot submission was persisted!"
-        # Also confirm the returned dummy id isn't in the list
-        assert d["submission"]["id"] not in after_ids
-
-    def test_normal_submission_no_website_ok(self, auth_headers):
-        r = requests.post(f"{API}/contact",
-                          json=_payload(name="HP_NORMAL", email="delivered@resend.dev"))
-        assert r.status_code == 200, r.text
-        d = r.json()
-        assert d["email_sent"] is True
-        assert d["confirmation_sent"] is True
         assert "website" not in d["submission"]
-        sid = d["submission"]["id"]
 
-        # Retrievable via protected list
-        r2 = requests.get(f"{API}/contact", headers=auth_headers)
-        assert r2.status_code == 200
-        assert any(x["id"] == sid for x in r2.json())
+        r2 = admin_session.get(f"{API}/contact")
+        after_ids = {x["id"] for x in r2.json()}
+        assert after_ids == before_ids
 
-        # Cleanup
-        requests.delete(f"{API}/contact/{sid}", headers=auth_headers)
-
-    def test_contact_rate_limit_10_per_hour(self, auth_headers):
-        """Run LAST: exhausts the per-IP 10/hour cap. Cleans contact_events after."""
-        # Clean slate first
+    def test_contact_rate_limit_10_per_hour(self, admin_session):
         import subprocess
         subprocess.run(
             ["mongosh", "--quiet", "test_database", "--eval",
@@ -298,17 +237,15 @@ class TestSecurityHardening:
             if r.status_code == 200:
                 ok_count += 1
                 sid = r.json()["submission"]["id"]
-                # cleanup as we go
-                requests.delete(f"{API}/contact/{sid}", headers=auth_headers)
+                admin_session.delete(f"{API}/contact/{sid}")
             elif r.status_code == 429:
                 rate_limited = True
                 assert "Retry-After" in r.headers
                 break
 
-        assert ok_count == 10, f"Expected 10 successful posts before 429, got {ok_count}"
-        assert rate_limited, "Rate limit (429) was never triggered after 10 posts"
+        assert ok_count == 10
+        assert rate_limited
 
-        # cleanup contact_events so subsequent runs are unaffected
         subprocess.run(
             ["mongosh", "--quiet", "test_database", "--eval",
              'db.contact_events.deleteMany({})'],

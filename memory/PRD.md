@@ -48,6 +48,9 @@ Create a professional demo website for a cleaning company based on its logo (L&A
 - P1: Verify own domain on Resend and set `SENDER_EMAIL` to e.g. `anfrage@la-gebaeudereinigung.de`; replace demo REVIEWS with real Google quotes
 - P2: service-area map
 
+## Cookie Sessions (2026-06, iteration 5)
+- Admin auth migrated from a localStorage bearer token to a **secure HttpOnly cookie** (`la_session`, Secure + SameSite=None, 12h). Token no longer readable by JS → XSS can't steal the session. `require_admin` reads cookie first (legacy Bearer fallback kept). Added `POST /api/auth/logout`. Frontend `Admin.jsx` uses `withCredentials`, checks session on mount via `/auth/me`, session survives reload. Verified backend 21/21 + frontend 100% (iteration_5.json).
+
 ## Security Hardening (2026-06, iteration 4 — post audit)
 Security audit verdict was CONDITIONAL PASS. Applied & verified (backend 24/24, frontend 100%, iteration_4.json):
 - **SEC-001 contact-form abuse (was MEDIUM)**: `POST /api/contact` now rate-limited to 10 submissions/hour per client IP (`contact_events` Mongo collection, 24h TTL index) → 429 + Retry-After beyond that. Added a **honeypot** field (`website`) — non-empty ⇒ silently dropped (not stored, no email). Added a **daily email cap** (500/day) that skips dispatch when exceeded. Honeypot `website` never stored/returned (`exclude=True` on ContactSubmission).

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -35,6 +35,8 @@ JWT_SECRET = os.environ['JWT_SECRET']
 JWT_ALGORITHM = "HS256"
 ADMIN_EMAIL = os.environ['ADMIN_EMAIL'].lower()
 ADMIN_PASSWORD = os.environ['ADMIN_PASSWORD']
+COOKIE_NAME = "la_session"
+COOKIE_MAX_AGE = 12 * 3600
 
 app = FastAPI(title="L&A Gebäudereinigung API")
 api_router = APIRouter(prefix="/api")
@@ -55,8 +57,10 @@ def create_access_token(email: str) -> str:
 
 
 async def require_admin(request: Request) -> str:
-    auth_header = request.headers.get("Authorization", "")
-    token = auth_header[7:] if auth_header.startswith("Bearer ") else None
+    token = request.cookies.get(COOKIE_NAME)
+    if not token:
+        auth_header = request.headers.get("Authorization", "")
+        token = auth_header[7:] if auth_header.startswith("Bearer ") else None
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
@@ -76,7 +80,6 @@ class LoginRequest(BaseModel):
 
 
 class LoginResponse(BaseModel):
-    token: str
     email: str
 
 
@@ -253,7 +256,7 @@ async def record_failed_attempt(identifier: str) -> int:
 
 
 @api_router.post("/auth/login", response_model=LoginResponse)
-async def login(body: LoginRequest, request: Request):
+async def login(body: LoginRequest, request: Request, response: Response):
     email = body.email.lower()
     identifier = f"{client_ip(request)}:{email}"
     await check_lockout(identifier)
@@ -272,7 +275,16 @@ async def login(body: LoginRequest, request: Request):
                                 headers={"Retry-After": str(LOCKOUT_MINUTES * 60)})
         raise HTTPException(status_code=401, detail=f"Invalid email or password. {remaining} attempt(s) left.")
     await db.login_attempts.delete_one({"identifier": identifier})
-    return LoginResponse(token=create_access_token(ADMIN_EMAIL), email=ADMIN_EMAIL)
+    token = create_access_token(ADMIN_EMAIL)
+    response.set_cookie(key=COOKIE_NAME, value=token, httponly=True, secure=True,
+                        samesite="none", max_age=COOKIE_MAX_AGE, path="/")
+    return LoginResponse(email=ADMIN_EMAIL)
+
+
+@api_router.post("/auth/logout")
+async def logout(response: Response):
+    response.delete_cookie(COOKIE_NAME, path="/")
+    return {"ok": True}
 
 
 @api_router.get("/auth/me")

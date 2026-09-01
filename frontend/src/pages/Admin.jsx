@@ -9,7 +9,7 @@ import { useLang } from "@/i18n/LanguageContext";
 import { SITE } from "@/config/site";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-const TOKEN_KEY = "la_admin_token";
+const WC = { withCredentials: true };
 const STATUS_STYLE = {
   new: "bg-sky-soft text-navy border-azure/30",
   contacted: "bg-amber-50 text-amber-700 border-amber-200",
@@ -36,9 +36,8 @@ function LoginScreen({ onLogin }) {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.post(`${API}/auth/login`, { email, password });
-      localStorage.setItem(TOKEN_KEY, data.token);
-      onLogin(data.token);
+      await axios.post(`${API}/auth/login`, { email, password }, WC);
+      onLogin();
     } catch (ex) {
       const is429 = ex?.response?.status === 429;
       setLocked(is429);
@@ -111,14 +110,12 @@ function LoginScreen({ onLogin }) {
   );
 }
 
-function Dashboard({ token, onLogout }) {
+function Dashboard({ onLogout }) {
   const { t, lang, toggle } = useLang();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [svc, setSvc] = useState("all");
-
-  const auth = useMemo(() => ({ headers: { Authorization: `Bearer ${token}` } }), [token]);
 
   const handle401 = useCallback((e) => {
     if (e?.response?.status === 401) {
@@ -131,14 +128,14 @@ function Dashboard({ token, onLogout }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`${API}/contact`, auth);
+      const { data } = await axios.get(`${API}/contact`, WC);
       setRows(data);
     } catch (e) {
       if (!handle401(e)) toast.error("Failed to load submissions");
     } finally {
       setLoading(false);
     }
-  }, [auth, handle401]);
+  }, [handle401]);
 
   useEffect(() => {
     load();
@@ -161,7 +158,7 @@ function Dashboard({ token, onLogout }) {
 
   const setStatus = async (id, status) => {
     try {
-      const { data } = await axios.patch(`${API}/contact/${id}/status`, { status }, auth);
+      const { data } = await axios.patch(`${API}/contact/${id}/status`, { status }, WC);
       setRows((rs) => rs.map((r) => (r.id === id ? data : r)));
       toast.success(t.admin.updated);
     } catch (e) {
@@ -172,7 +169,7 @@ function Dashboard({ token, onLogout }) {
   const remove = async (id) => {
     if (!window.confirm(t.admin.delete_confirm)) return;
     try {
-      await axios.delete(`${API}/contact/${id}`, auth);
+      await axios.delete(`${API}/contact/${id}`, WC);
       setRows((rs) => rs.filter((r) => r.id !== id));
       toast.success(t.admin.deleted);
     } catch (e) {
@@ -324,13 +321,28 @@ function Dashboard({ token, onLogout }) {
 }
 
 export default function Admin() {
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
+  const [authed, setAuthed] = useState(null); // null = checking, true, false
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY);
-    setToken(null);
+  useEffect(() => {
+    axios.get(`${API}/auth/me`, WC).then(() => setAuthed(true)).catch(() => setAuthed(false));
   }, []);
 
-  if (!token) return <LoginScreen onLogin={setToken} />;
-  return <Dashboard token={token} onLogout={logout} />;
+  const logout = useCallback(async () => {
+    try {
+      await axios.post(`${API}/auth/logout`, {}, WC);
+    } catch {
+      /* ignore */
+    }
+    setAuthed(false);
+  }, []);
+
+  if (authed === null) {
+    return (
+      <div data-testid="admin-checking-session" className="min-h-screen bg-navy-deep flex items-center justify-center">
+        <RefreshCw className="h-6 w-6 animate-spin text-cyan-300" />
+      </div>
+    );
+  }
+  if (!authed) return <LoginScreen onLogin={() => setAuthed(true)} />;
+  return <Dashboard onLogout={logout} />;
 }
